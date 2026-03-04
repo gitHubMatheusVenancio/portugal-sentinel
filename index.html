@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PORTUGAL · SENTINEL — Monitor de Risco Nacional</title>
+  <title>PORTUGAL · BRAZIL · SENTINEL — Monitor de Risco Nacional</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link
     href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;400;600;700;900&family=Barlow:wght@300;400;500&display=swap"
@@ -1288,11 +1288,17 @@
           });
           const ct = response.headers.get('content-type') || '';
           if (!ct.includes('application/json')) {
-            throw new Error('groq-proxy.php não encontrado. Para testar, configure GROQ_API_KEY no topo do script.');
+            throw new Error('groq-proxy.php não encontrado ou erro de servidor. Configure GROQ_API_KEY no topo do HTML para testar sem servidor.');
           }
           const data = await response.json();
           clearInterval(stepInterval);
-          if (data.error) throw new Error(data.error);
+          if (data.error) {
+            // Mostra detalhes do erro Groq para facilitar diagnóstico
+            const detail = typeof data.raw === 'object'
+              ? (data.raw?.error?.message || JSON.stringify(data.raw))
+              : (data.raw || data.error);
+            throw new Error(data.error + (detail ? ': ' + detail : ''));
+          }
           analysis = data;
         }
 
@@ -1459,9 +1465,58 @@ Retorne EXATAMENTE este JSON (sem texto extra, sem backticks):
     }
 
     function renderError(msg) {
+      const raw = msg.toLowerCase();
+
+      // ── Limite diário de tokens esgotado ──
+      if (raw.includes('tokens per day') || raw.includes('tpd')) {
+        const nowUtc = new Date();
+        const resetUtc = new Date(Date.UTC(nowUtc.getUTCFullYear(), nowUtc.getUTCMonth(), nowUtc.getUTCDate() + 1));
+        const diffMs = resetUtc - nowUtc;
+        const diffH = Math.floor(diffMs / 3600000);
+        const diffM = Math.floor((diffMs % 3600000) / 60000);
+        document.getElementById('globalLabel').textContent = 'LIMITE DIÁRIO ATINGIDO';
+        document.getElementById('globalLabel').style.color = 'var(--yellow)';
+        document.getElementById('orbNum').textContent = '⏳';
+        document.getElementById('globalSummary').textContent =
+          `O limite gratuito de tokens diários da Groq foi atingido (100 000 tokens/dia). `
+          + `O serviço renova automaticamente à meia-noite UTC — em aproximadamente ${diffH}h ${diffM}m. `
+          + `Não é necessária nenhuma ação da sua parte.`;
+        return;
+      }
+
+      // ── Rate limit de curta duração ──
+      const retryMatch = raw.match(/try again in (\d+)m(\d+)/);
+      if (raw.includes('rate limit') && retryMatch) {
+        const mins = retryMatch[1], secs = retryMatch[2];
+        document.getElementById('globalLabel').textContent = 'PAUSA TEMPORÁRIA';
+        document.getElementById('globalLabel').style.color = 'var(--yellow)';
+        document.getElementById('orbNum').textContent = '⏳';
+        document.getElementById('globalSummary').textContent =
+          `Demasiados pedidos em pouco tempo. A Groq pede uma pausa de ${mins}m${secs}s. `
+          + `O dashboard vai tentar novamente automaticamente.`;
+        // Auto-retry após o tempo indicado
+        const waitMs = (parseInt(mins) * 60 + parseInt(secs)) * 1000 + 5000;
+        setTimeout(runAnalysis, waitMs);
+        return;
+      }
+
+      // ── Key não configurada ──
+      if (raw.includes('api key') || raw.includes('não configurada') || raw.includes('unauthorized')) {
+        document.getElementById('globalLabel').textContent = 'KEY NÃO CONFIGURADA';
+        document.getElementById('globalLabel').style.color = 'var(--red)';
+        document.getElementById('orbNum').textContent = '🔑';
+        document.getElementById('globalSummary').textContent =
+          `A API key da Groq não está configurada. Obtenha uma gratuitamente em console.groq.com `
+          + `e cole-a na variável GROQ_API_KEY no topo do script (modo teste) ou em groq-proxy.php (servidor).`;
+        return;
+      }
+
+      // ── Erro genérico ──
       document.getElementById('globalLabel').textContent = 'ERRO DE CONEXÃO';
       document.getElementById('globalLabel').style.color = 'var(--red)';
-      document.getElementById('globalSummary').textContent = `Não foi possível obter análise. ${msg}. A tentar novamente em 5 minutos.`;
+      document.getElementById('orbNum').textContent = '!';
+      document.getElementById('globalSummary').textContent = `Não foi possível obter análise: ${msg}`;
+      console.error('[Sentinel]', msg);
     }
 
     // ── VISITOR COUNTER (persiste em contador.txt via contador.php) ──────
