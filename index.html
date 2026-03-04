@@ -1,1000 +1,1326 @@
 <!DOCTYPE html>
 <html lang="pt">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PORTUGAL · SENTINEL — Monitor de Risco Nacional</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;400;600;700;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --bg: #080c10;
-    --surface: #0d1318;
-    --border: #1a2530;
-    --text: #c8d8e8;
-    --muted: #4a6070;
-    --accent: #00d4ff;
-    --green: #00ff88;
-    --yellow: #ffd600;
-    --orange: #ff8c00;
-    --red: #ff2040;
-    --black-alert: #ff00ff;
-    --mono: 'Share Tech Mono', monospace;
-    --cond: 'Barlow Condensed', sans-serif;
-    --body: 'Barlow', sans-serif;
-  }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--body);
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  /* Scanline overlay */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background: repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 2px,
-      rgba(0,0,0,0.03) 2px,
-      rgba(0,0,0,0.03) 4px
-    );
-    pointer-events: none;
-    z-index: 1000;
-  }
-
-  /* Noise texture */
-  body::after {
-    content: '';
-    position: fixed;
-    inset: 0;
-    opacity: 0.025;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-    pointer-events: none;
-    z-index: 999;
-  }
-
-  /* ── HEADER ── */
-  .header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 20px 32px;
-    border-bottom: 1px solid var(--border);
-    position: relative;
-    overflow: hidden;
-  }
-
-  .header-glow {
-    position: absolute;
-    top: -40px; left: 50%;
-    transform: translateX(-50%);
-    width: 600px; height: 100px;
-    background: radial-gradient(ellipse, rgba(0,212,255,0.08), transparent 70%);
-    pointer-events: none;
-  }
-
-  .logo-block {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-  }
-
-  .logo-icon {
-    width: 42px; height: 42px;
-    border: 1.5px solid var(--accent);
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    position: relative;
-    animation: pulse-border 3s ease-in-out infinite;
-  }
-
-  @keyframes pulse-border {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(0,212,255,0); }
-    50% { box-shadow: 0 0 0 6px rgba(0,212,255,0.12); }
-  }
-
-  .logo-text h1 {
-    font-family: var(--cond);
-    font-size: 22px;
-    font-weight: 900;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: #fff;
-  }
-
-  .logo-text span {
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--accent);
-    letter-spacing: 0.3em;
-    display: block;
-    margin-top: -2px;
-  }
-
-  .header-status {
-    display: flex;
-    align-items: center;
-    gap: 24px;
-  }
-
-  .live-badge {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--green);
-    letter-spacing: 0.1em;
-  }
-
-  .live-dot {
-    width: 7px; height: 7px;
-    border-radius: 50%;
-    background: var(--green);
-    animation: blink 1.4s ease-in-out infinite;
-  }
-
-  @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.2; }
-  }
-
-  .clock {
-    font-family: var(--mono);
-    font-size: 13px;
-    color: var(--text);
-    letter-spacing: 0.05em;
-  }
-
-  .refresh-btn {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--accent);
-    background: rgba(0,212,255,0.06);
-    border: 1px solid rgba(0,212,255,0.25);
-    padding: 6px 14px;
-    border-radius: 4px;
-    cursor: pointer;
-    letter-spacing: 0.1em;
-    transition: all 0.2s;
-  }
-
-  .refresh-btn:hover {
-    background: rgba(0,212,255,0.15);
-    border-color: var(--accent);
-  }
-
-  .refresh-btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
-
-  /* ── GLOBAL RISK BANNER ── */
-  .global-banner {
-    padding: 16px 32px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    gap: 24px;
-    position: relative;
-    transition: background 0.5s;
-  }
-
-  .global-banner.level-1 { background: rgba(0,255,136,0.04); }
-  .global-banner.level-2 { background: rgba(0,255,136,0.06); }
-  .global-banner.level-3 { background: rgba(255,214,0,0.05); }
-  .global-banner.level-4 { background: rgba(255,140,0,0.06); }
-  .global-banner.level-5 { background: rgba(255,32,64,0.07); }
-  .global-banner.level-6 { background: rgba(255,0,255,0.08); }
-
-  .risk-orb {
-    width: 72px; height: 72px;
-    border-radius: 50%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    border: 2px solid;
-    flex-shrink: 0;
-    position: relative;
-    font-family: var(--cond);
-    font-weight: 900;
-  }
-
-  .risk-orb .orb-num {
-    font-size: 28px;
-    line-height: 1;
-  }
-
-  .risk-orb .orb-max {
-    font-size: 10px;
-    opacity: 0.6;
-    letter-spacing: 0.1em;
-  }
-
-  .risk-orb::after {
-    content: '';
-    position: absolute;
-    inset: -8px;
-    border-radius: 50%;
-    border: 1px solid;
-    opacity: 0.2;
-    animation: orbit-pulse 2s ease-in-out infinite;
-  }
-
-  @keyframes orbit-pulse {
-    0%, 100% { transform: scale(1); opacity: 0.2; }
-    50% { transform: scale(1.1); opacity: 0.05; }
-  }
-
-  .global-info { flex: 1; }
-
-  .risk-label {
-    font-family: var(--cond);
-    font-size: 28px;
-    font-weight: 900;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    line-height: 1;
-    margin-bottom: 4px;
-  }
-
-  .risk-sublabel {
-    font-size: 13px;
-    color: var(--muted);
-    letter-spacing: 0.05em;
-  }
-
-  .risk-summary-text {
-    font-size: 13.5px;
-    color: var(--text);
-    line-height: 1.55;
-    max-width: 700px;
-    margin-top: 8px;
-  }
-
-  .cron-info {
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--muted);
-    text-align: right;
-    line-height: 1.7;
-  }
-
-  /* ── LEGEND ── */
-  .legend-bar {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 32px;
-    border-bottom: 1px solid var(--border);
-    flex-wrap: wrap;
-  }
-
-  .legend-label {
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--muted);
-    margin-right: 6px;
-    letter-spacing: 0.1em;
-  }
-
-  .legend-item {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    font-family: var(--mono);
-    font-size: 10px;
-    letter-spacing: 0.05em;
-  }
-
-  .legend-dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-  }
-
-  /* ── GRID ── */
-  .main-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1px;
-    background: var(--border);
-    border-top: none;
-  }
-
-  @media (max-width: 900px) {
-    .main-grid { grid-template-columns: 1fr 1fr; }
-  }
-
-  @media (max-width: 560px) {
-    .main-grid { grid-template-columns: 1fr; }
-  }
-
-  .card {
-    background: var(--surface);
-    padding: 20px;
-    position: relative;
-    overflow: hidden;
-    transition: all 0.4s;
-  }
-
-  .card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
-    transition: background 0.4s;
-  }
-
-  .card.risk-1::before { background: var(--green); }
-  .card.risk-2::before { background: #80ff44; }
-  .card.risk-3::before { background: var(--yellow); }
-  .card.risk-4::before { background: var(--orange); }
-  .card.risk-5::before { background: var(--red); }
-  .card.risk-6::before { background: var(--black-alert); }
-
-  .card-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    margin-bottom: 14px;
-  }
-
-  .card-icon {
-    font-size: 22px;
-    margin-bottom: 4px;
-  }
-
-  .card-title {
-    font-family: var(--cond);
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 1px;
-  }
-
-  .card-subtitle {
-    font-family: var(--mono);
-    font-size: 9px;
-    color: var(--muted);
-    letter-spacing: 0.1em;
-    opacity: 0.6;
-  }
-
-  .risk-badge {
-    font-family: var(--cond);
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    padding: 3px 8px;
-    border-radius: 3px;
-    text-transform: uppercase;
-    white-space: nowrap;
-  }
-
-  .risk-1 .risk-badge { background: rgba(0,255,136,0.12); color: var(--green); border: 1px solid rgba(0,255,136,0.3); }
-  .risk-2 .risk-badge { background: rgba(128,255,68,0.12); color: #80ff44; border: 1px solid rgba(128,255,68,0.3); }
-  .risk-3 .risk-badge { background: rgba(255,214,0,0.12); color: var(--yellow); border: 1px solid rgba(255,214,0,0.3); }
-  .risk-4 .risk-badge { background: rgba(255,140,0,0.12); color: var(--orange); border: 1px solid rgba(255,140,0,0.3); }
-  .risk-5 .risk-badge { background: rgba(255,32,64,0.12); color: var(--red); border: 1px solid rgba(255,32,64,0.3); }
-  .risk-6 .risk-badge { background: rgba(255,0,255,0.12); color: var(--black-alert); border: 1px solid rgba(255,0,255,0.3); }
-
-  /* Score bar */
-  .score-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 10px;
-  }
-
-  .score-bar-wrap {
-    flex: 1;
-    height: 4px;
-    background: rgba(255,255,255,0.06);
-    border-radius: 2px;
-    overflow: hidden;
-  }
-
-  .score-bar-fill {
-    height: 100%;
-    border-radius: 2px;
-    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .score-num {
-    font-family: var(--mono);
-    font-size: 18px;
-    font-weight: 400;
-    min-width: 36px;
-    text-align: right;
-    line-height: 1;
-  }
-
-  .card-text {
-    font-size: 12px;
-    color: rgba(200,216,232,0.7);
-    line-height: 1.6;
-    margin-bottom: 10px;
-  }
-
-  /* Indicators */
-  .indicators {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    margin-top: 8px;
-  }
-
-  .indicator-row {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--muted);
-  }
-
-  .ind-dot {
-    width: 5px; height: 5px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-
-  /* Safety box */
-  .safety-section {
-    background: var(--surface);
-    border-top: 1px solid var(--border);
-    padding: 24px 32px;
-  }
-
-  .safety-title {
-    font-family: var(--cond);
-    font-size: 14px;
-    font-weight: 700;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 16px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .safety-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 12px;
-  }
-
-  .safety-card {
-    background: rgba(255,255,255,0.02);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 14px;
-  }
-
-  .safety-card-title {
-    font-family: var(--cond);
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    margin-bottom: 8px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .safety-card ul {
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-  }
-
-  .safety-card ul li {
-    font-size: 12px;
-    color: rgba(200,216,232,0.75);
-    line-height: 1.5;
-    padding-left: 12px;
-    position: relative;
-  }
-
-  .safety-card ul li::before {
-    content: '›';
-    position: absolute;
-    left: 0;
-    color: var(--accent);
-  }
-
-  /* Footer */
-  .footer {
-    padding: 14px 32px;
-    border-top: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-
-  .footer-text {
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--muted);
-    letter-spacing: 0.05em;
-  }
-
-  .next-refresh {
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--accent);
-    letter-spacing: 0.1em;
-  }
-
-  .visitor-counter {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: rgba(0,212,255,0.04);
-    border: 1px solid rgba(0,212,255,0.12);
-    border-radius: 4px;
-    padding: 6px 14px;
-  }
-
-  .visitor-icon { font-size: 13px; }
-
-  .visitor-nums {
-    display: flex;
-    gap: 14px;
-  }
-
-  .visitor-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1px;
-  }
-
-  .visitor-num {
-    font-family: var(--mono);
-    font-size: 15px;
-    color: var(--accent);
-    line-height: 1;
-    letter-spacing: 0.05em;
-  }
-
-  .visitor-lbl {
-    font-family: var(--mono);
-    font-size: 9px;
-    color: var(--muted);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-  }
-
-  .visitor-divider {
-    width: 1px;
-    height: 28px;
-    background: var(--border);
-  }
-
-  /* Loading state */
-  .loading-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(8,12,16,0.85);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    z-index: 500;
-    backdrop-filter: blur(4px);
-    transition: opacity 0.4s;
-  }
-
-  .loading-overlay.hidden { opacity: 0; pointer-events: none; }
-
-  .loading-spinner {
-    width: 48px; height: 48px;
-    border: 2px solid rgba(0,212,255,0.1);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    margin-bottom: 20px;
-  }
-
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  .loading-text {
-    font-family: var(--mono);
-    font-size: 12px;
-    color: var(--accent);
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    animation: text-flicker 1.5s ease-in-out infinite;
-  }
-
-  @keyframes text-flicker {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-  }
-
-  .loading-sub {
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--muted);
-    letter-spacing: 0.1em;
-    margin-top: 6px;
-  }
-
-  /* Color helpers for orb/scores */
-  .c-green { color: var(--green); border-color: var(--green); }
-  .c-green2 { color: #80ff44; border-color: #80ff44; }
-  .c-yellow { color: var(--yellow); border-color: var(--yellow); }
-  .c-orange { color: var(--orange); border-color: var(--orange); }
-  .c-red { color: var(--red); border-color: var(--red); }
-  .c-magenta { color: var(--black-alert); border-color: var(--black-alert); }
-
-  .fill-green { background: var(--green); }
-  .fill-green2 { background: #80ff44; }
-  .fill-yellow { background: var(--yellow); }
-  .fill-orange { background: var(--orange); }
-  .fill-red { background: var(--red); }
-  .fill-magenta { background: var(--black-alert); }
-
-  /* Animated background grid lines */
-  .bg-lines {
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 0;
-    opacity: 0.03;
-    background-image:
-      linear-gradient(rgba(0,212,255,0.5) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,212,255,0.5) 1px, transparent 1px);
-    background-size: 60px 60px;
-  }
-
-  .content-wrap { position: relative; z-index: 1; }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PORTUGAL · SENTINEL — Monitor de Risco Nacional</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;400;600;700;900&family=Barlow:wght@300;400;500&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #080c10;
+      --surface: #0d1318;
+      --border: #1a2530;
+      --text: #c8d8e8;
+      --muted: #4a6070;
+      --accent: #00d4ff;
+      --green: #00ff88;
+      --yellow: #ffd600;
+      --orange: #ff8c00;
+      --red: #ff2040;
+      --black-alert: #ff00ff;
+      --mono: 'Share Tech Mono', monospace;
+      --cond: 'Barlow Condensed', sans-serif;
+      --body: 'Barlow', sans-serif;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--body);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Scanline overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(0deg,
+          transparent,
+          transparent 2px,
+          rgba(0, 0, 0, 0.03) 2px,
+          rgba(0, 0, 0, 0.03) 4px);
+      pointer-events: none;
+      z-index: 1000;
+    }
+
+    /* Noise texture */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      opacity: 0.025;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 32px;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .header-glow {
+      position: absolute;
+      top: -40px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 600px;
+      height: 100px;
+      background: radial-gradient(ellipse, rgba(0, 212, 255, 0.08), transparent 70%);
+      pointer-events: none;
+    }
+
+    .logo-block {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .logo-icon {
+      width: 42px;
+      height: 42px;
+      border: 1.5px solid var(--accent);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      position: relative;
+      animation: pulse-border 3s ease-in-out infinite;
+    }
+
+    @keyframes pulse-border {
+
+      0%,
+      100% {
+        box-shadow: 0 0 0 0 rgba(0, 212, 255, 0);
+      }
+
+      50% {
+        box-shadow: 0 0 0 6px rgba(0, 212, 255, 0.12);
+      }
+    }
+
+    .logo-text h1 {
+      font-family: var(--cond);
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #fff;
+    }
+
+    .logo-text span {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--accent);
+      letter-spacing: 0.3em;
+      display: block;
+      margin-top: -2px;
+    }
+
+    .header-status {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .live-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--green);
+      letter-spacing: 0.1em;
+    }
+
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: blink 1.4s ease-in-out infinite;
+    }
+
+    @keyframes blink {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.2;
+      }
+    }
+
+    .clock {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--text);
+      letter-spacing: 0.05em;
+    }
+
+    .refresh-btn {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--accent);
+      background: rgba(0, 212, 255, 0.06);
+      border: 1px solid rgba(0, 212, 255, 0.25);
+      padding: 6px 14px;
+      border-radius: 4px;
+      cursor: pointer;
+      letter-spacing: 0.1em;
+      transition: all 0.2s;
+    }
+
+    .refresh-btn:hover {
+      background: rgba(0, 212, 255, 0.15);
+      border-color: var(--accent);
+    }
+
+    .refresh-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* ── GLOBAL RISK BANNER ── */
+    .global-banner {
+      padding: 16px 32px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      position: relative;
+      transition: background 0.5s;
+    }
+
+    .global-banner.level-1 {
+      background: rgba(0, 255, 136, 0.04);
+    }
+
+    .global-banner.level-2 {
+      background: rgba(0, 255, 136, 0.06);
+    }
+
+    .global-banner.level-3 {
+      background: rgba(255, 214, 0, 0.05);
+    }
+
+    .global-banner.level-4 {
+      background: rgba(255, 140, 0, 0.06);
+    }
+
+    .global-banner.level-5 {
+      background: rgba(255, 32, 64, 0.07);
+    }
+
+    .global-banner.level-6 {
+      background: rgba(255, 0, 255, 0.08);
+    }
+
+    .risk-orb {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid;
+      flex-shrink: 0;
+      position: relative;
+      font-family: var(--cond);
+      font-weight: 900;
+    }
+
+    .risk-orb .orb-num {
+      font-size: 28px;
+      line-height: 1;
+    }
+
+    .risk-orb .orb-max {
+      font-size: 10px;
+      opacity: 0.6;
+      letter-spacing: 0.1em;
+    }
+
+    .risk-orb::after {
+      content: '';
+      position: absolute;
+      inset: -8px;
+      border-radius: 50%;
+      border: 1px solid;
+      opacity: 0.2;
+      animation: orbit-pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes orbit-pulse {
+
+      0%,
+      100% {
+        transform: scale(1);
+        opacity: 0.2;
+      }
+
+      50% {
+        transform: scale(1.1);
+        opacity: 0.05;
+      }
+    }
+
+    .global-info {
+      flex: 1;
+    }
+
+    .risk-label {
+      font-family: var(--cond);
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .risk-sublabel {
+      font-size: 13px;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+    }
+
+    .risk-summary-text {
+      font-size: 13.5px;
+      color: var(--text);
+      line-height: 1.55;
+      max-width: 700px;
+      margin-top: 8px;
+    }
+
+    .cron-info {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+      text-align: right;
+      line-height: 1.7;
+    }
+
+    /* ── LEGEND ── */
+    .legend-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 32px;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+
+    .legend-label {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+      margin-right: 6px;
+      letter-spacing: 0.1em;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.05em;
+    }
+
+    .legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    /* ── GRID ── */
+    .main-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border-top: none;
+    }
+
+    @media (max-width: 900px) {
+      .main-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--surface);
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.4s;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      transition: background 0.4s;
+    }
+
+    .card.risk-1::before {
+      background: var(--green);
+    }
+
+    .card.risk-2::before {
+      background: #80ff44;
+    }
+
+    .card.risk-3::before {
+      background: var(--yellow);
+    }
+
+    .card.risk-4::before {
+      background: var(--orange);
+    }
+
+    .card.risk-5::before {
+      background: var(--red);
+    }
+
+    .card.risk-6::before {
+      background: var(--black-alert);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .card-icon {
+      font-size: 22px;
+      margin-bottom: 4px;
+    }
+
+    .card-title {
+      font-family: var(--cond);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1px;
+    }
+
+    .card-subtitle {
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      opacity: 0.6;
+    }
+
+    .risk-badge {
+      font-family: var(--cond);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      padding: 3px 8px;
+      border-radius: 3px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .risk-1 .risk-badge {
+      background: rgba(0, 255, 136, 0.12);
+      color: var(--green);
+      border: 1px solid rgba(0, 255, 136, 0.3);
+    }
+
+    .risk-2 .risk-badge {
+      background: rgba(128, 255, 68, 0.12);
+      color: #80ff44;
+      border: 1px solid rgba(128, 255, 68, 0.3);
+    }
+
+    .risk-3 .risk-badge {
+      background: rgba(255, 214, 0, 0.12);
+      color: var(--yellow);
+      border: 1px solid rgba(255, 214, 0, 0.3);
+    }
+
+    .risk-4 .risk-badge {
+      background: rgba(255, 140, 0, 0.12);
+      color: var(--orange);
+      border: 1px solid rgba(255, 140, 0, 0.3);
+    }
+
+    .risk-5 .risk-badge {
+      background: rgba(255, 32, 64, 0.12);
+      color: var(--red);
+      border: 1px solid rgba(255, 32, 64, 0.3);
+    }
+
+    .risk-6 .risk-badge {
+      background: rgba(255, 0, 255, 0.12);
+      color: var(--black-alert);
+      border: 1px solid rgba(255, 0, 255, 0.3);
+    }
+
+    /* Score bar */
+    .score-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .score-bar-wrap {
+      flex: 1;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .score-bar-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .score-num {
+      font-family: var(--mono);
+      font-size: 18px;
+      font-weight: 400;
+      min-width: 36px;
+      text-align: right;
+      line-height: 1;
+    }
+
+    .card-text {
+      font-size: 12px;
+      color: rgba(200, 216, 232, 0.7);
+      line-height: 1.6;
+      margin-bottom: 10px;
+    }
+
+    /* Indicators */
+    .indicators {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin-top: 8px;
+    }
+
+    .indicator-row {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    .ind-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* Safety box */
+    .safety-section {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 24px 32px;
+    }
+
+    .safety-title {
+      font-family: var(--cond);
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .safety-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 12px;
+    }
+
+    .safety-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 14px;
+    }
+
+    .safety-card-title {
+      font-family: var(--cond);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .safety-card ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .safety-card ul li {
+      font-size: 12px;
+      color: rgba(200, 216, 232, 0.75);
+      line-height: 1.5;
+      padding-left: 12px;
+      position: relative;
+    }
+
+    .safety-card ul li::before {
+      content: '›';
+      position: absolute;
+      left: 0;
+      color: var(--accent);
+    }
+
+    /* Footer */
+    .footer {
+      padding: 14px 32px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .footer-text {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+    }
+
+    .next-refresh {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--accent);
+      letter-spacing: 0.1em;
+    }
+
+    .visitor-counter {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(0, 212, 255, 0.04);
+      border: 1px solid rgba(0, 212, 255, 0.12);
+      border-radius: 4px;
+      padding: 6px 14px;
+    }
+
+    .visitor-icon {
+      font-size: 13px;
+    }
+
+    .visitor-nums {
+      display: flex;
+      gap: 14px;
+    }
+
+    .visitor-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1px;
+    }
+
+    .visitor-num {
+      font-family: var(--mono);
+      font-size: 15px;
+      color: var(--accent);
+      line-height: 1;
+      letter-spacing: 0.05em;
+    }
+
+    .visitor-lbl {
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .visitor-divider {
+      width: 1px;
+      height: 28px;
+      background: var(--border);
+    }
+
+    /* Loading state */
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(8, 12, 16, 0.85);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 500;
+      backdrop-filter: blur(4px);
+      transition: opacity 0.4s;
+    }
+
+    .loading-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .loading-spinner {
+      width: 48px;
+      height: 48px;
+      border: 2px solid rgba(0, 212, 255, 0.1);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 20px;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .loading-text {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--accent);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      animation: text-flicker 1.5s ease-in-out infinite;
+    }
+
+    @keyframes text-flicker {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    .loading-sub {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      margin-top: 6px;
+    }
+
+    /* Color helpers for orb/scores */
+    .c-green {
+      color: var(--green);
+      border-color: var(--green);
+    }
+
+    .c-green2 {
+      color: #80ff44;
+      border-color: #80ff44;
+    }
+
+    .c-yellow {
+      color: var(--yellow);
+      border-color: var(--yellow);
+    }
+
+    .c-orange {
+      color: var(--orange);
+      border-color: var(--orange);
+    }
+
+    .c-red {
+      color: var(--red);
+      border-color: var(--red);
+    }
+
+    .c-magenta {
+      color: var(--black-alert);
+      border-color: var(--black-alert);
+    }
+
+    .fill-green {
+      background: var(--green);
+    }
+
+    .fill-green2 {
+      background: #80ff44;
+    }
+
+    .fill-yellow {
+      background: var(--yellow);
+    }
+
+    .fill-orange {
+      background: var(--orange);
+    }
+
+    .fill-red {
+      background: var(--red);
+    }
+
+    .fill-magenta {
+      background: var(--black-alert);
+    }
+
+    /* Animated background grid lines */
+    .bg-lines {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.03;
+      background-image:
+        linear-gradient(rgba(0, 212, 255, 0.5) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 212, 255, 0.5) 1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+
+    .content-wrap {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── COUNTRY SELECTOR ── */
+    .country-selector {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 32px;
+      background: rgba(0, 0, 0, 0.25);
+      border-bottom: 1px solid var(--border);
+      justify-content: center;
+      position: relative;
+    }
+
+    .country-selector-label {
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--muted);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-right: 4px;
+    }
+
+    .country-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      padding: 10px 18px;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      position: relative;
+      transition: all 0.25s;
+      border-bottom: 2px solid transparent;
+    }
+
+    .country-btn:hover .country-map svg path {
+      opacity: 0.9;
+    }
+
+    .country-btn.active {
+      border-bottom-color: var(--accent);
+    }
+
+    .country-btn.active .country-map svg path {
+      fill: var(--accent);
+      opacity: 1;
+    }
+
+    .country-btn.active .country-name {
+      color: var(--accent);
+    }
+
+
+
+    .country-name {
+      font-family: var(--cond);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      transition: color 0.25s;
+    }
+
+    .country-flag {
+      font-size: 28px;
+      line-height: 1;
+    }
+
+    .selector-divider {
+      width: 1px;
+      height: 40px;
+      background: var(--border);
+      margin: 0 6px;
+    }
+  </style>
 </head>
+
 <body>
 
-<div class="bg-lines"></div>
+  <div class="bg-lines"></div>
 
-<!-- Loading overlay -->
-<div class="loading-overlay" id="loadingOverlay">
-  <div class="loading-spinner"></div>
-  <div class="loading-text">A analisar ameaças</div>
-  <div class="loading-sub" id="loadingStep">Conectando aos feeds de inteligência...</div>
-</div>
-
-<div class="content-wrap">
-
-  <!-- HEADER -->
-  <div class="header">
-    <div class="header-glow"></div>
-    <div class="logo-block">
-      <div class="logo-icon">🛡️</div>
-      <div class="logo-text">
-        <h1>Portugal · Sentinel</h1>
-        <span>MONITOR DE RISCO NACIONAL · v3.0 · GROQ</span>
-      </div>
-    </div>
-    <div class="header-status">
-      <div class="live-badge">
-        <div class="live-dot"></div>
-        GROQ · LLAMA 3.3 · AO VIVO
-      </div>
-      <div class="clock" id="clock">--:--:--</div>
-      <button class="refresh-btn" id="refreshBtn" onclick="runAnalysis()">⟳ ATUALIZAR</button>
-    </div>
+  <!-- Loading overlay -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">A analisar ameaças</div>
+    <div class="loading-sub" id="loadingStep">Conectando aos feeds de inteligência...</div>
   </div>
 
-  <!-- GLOBAL RISK BANNER -->
-  <div class="global-banner" id="globalBanner">
-    <div class="risk-orb" id="globalOrb">
-      <span class="orb-num" id="orbNum">—</span>
-      <span class="orb-max">/10</span>
-    </div>
-    <div class="global-info">
-      <div class="risk-label" id="globalLabel">A CALCULAR...</div>
-      <div class="risk-sublabel" id="globalSub">Aguardando análise de inteligência</div>
-      <div class="risk-summary-text" id="globalSummary"></div>
-    </div>
-    <div class="cron-info" id="cronInfo">
-      <div>Última análise: —</div>
-      <div>Próxima: —</div>
-      <div>Ciclo: 30 min</div>
-      <div>Motor: Groq · Llama 3.3 70B</div>
-    </div>
-  </div>
+  <div class="content-wrap">
 
-  <!-- LEGEND -->
-  <div class="legend-bar">
-    <span class="legend-label">ESCALA DE RISCO:</span>
-    <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div> 1-2 Mínimo</div>
-    <div class="legend-item"><div class="legend-dot" style="background:#80ff44"></div> 3-4 Baixo</div>
-    <div class="legend-item"><div class="legend-dot" style="background:var(--yellow)"></div> 5-6 Moderado</div>
-    <div class="legend-item"><div class="legend-dot" style="background:var(--orange)"></div> 7 Elevado</div>
-    <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div> 8-9 Crítico</div>
-    <div class="legend-item"><div class="legend-dot" style="background:var(--black-alert)"></div> 10 Emergência</div>
-  </div>
-
-  <!-- RISK CARDS GRID -->
-  <div class="main-grid" id="cardsGrid">
-    <!-- Cards are injected by JS -->
-  </div>
-
-  <!-- SAFETY RECOMMENDATIONS -->
-  <div class="safety-section" id="safetySection" style="display:none">
-    <div class="safety-title">
-      <span>⚠</span> RECOMENDAÇÕES DE SEGURANÇA
-    </div>
-    <div class="safety-grid" id="safetyGrid"></div>
-  </div>
-
-  <!-- FOOTER -->
-  <div class="footer">
-    <div class="footer-text">
-      PORTUGAL SENTINEL · Análise gerada por IA · Dados geopolíticos, económicos e ambientais · Março 2026
-    </div>
-    <div class="visitor-counter" id="visitorCounter">
-      <span class="visitor-icon">👁</span>
-      <div class="visitor-nums">
-        <div class="visitor-item">
-          <span class="visitor-num" id="visitorOnline">—</span>
-          <span class="visitor-lbl">Online</span>
-        </div>
-        <div class="visitor-divider"></div>
-        <div class="visitor-item">
-          <span class="visitor-num" id="visitorToday">—</span>
-          <span class="visitor-lbl">Hoje</span>
-        </div>
-        <div class="visitor-divider"></div>
-        <div class="visitor-item">
-          <span class="visitor-num" id="visitorTotal">—</span>
-          <span class="visitor-lbl">Total</span>
+    <!-- HEADER -->
+    <div class="header">
+      <div class="header-glow"></div>
+      <div class="logo-block">
+        <div class="logo-icon">🛡️</div>
+        <div class="logo-text">
+          <h1 id="headerTitle">Portugal · Sentinel</h1>
+          <span>MONITOR DE RISCO NACIONAL · v4.0 · GROQ</span>
         </div>
       </div>
+      <div class="header-status">
+        <div class="live-badge">
+          <div class="live-dot"></div>
+          GROQ · LLAMA 3.3 · AO VIVO
+        </div>
+        <div class="clock" id="clock">--:--:--</div>
+        <button class="refresh-btn" id="refreshBtn" onclick="runAnalysis()">⟳ ATUALIZAR</button>
+      </div>
     </div>
-    <div class="next-refresh" id="nextRefreshDisplay">Próxima atualização: calculando...</div>
+
+    <!-- COUNTRY SELECTOR -->
+    <div class="country-selector">
+      <span class="country-selector-label">SELECIONAR PAÍS</span>
+
+      <button class="country-btn active" id="btn-pt" onclick="selectCountry('pt')">
+
+        <span class="country-flag">🇵🇹</span>
+        <span class="country-name">Portugal</span>
+      </button>
+
+      <div class="selector-divider"></div>
+
+      <button class="country-btn" id="btn-br" onclick="selectCountry('br')">
+
+        <span class="country-flag">🇧🇷</span>
+        <span class="country-name">Brasil</span>
+      </button>
+    </div>
+
+    <!-- GLOBAL RISK BANNER -->
+    <div class="global-banner" id="globalBanner">
+      <div class="risk-orb" id="globalOrb">
+        <span class="orb-num" id="orbNum">—</span>
+        <span class="orb-max">/10</span>
+      </div>
+      <div class="global-info">
+        <div class="risk-label" id="globalLabel">A CALCULAR...</div>
+        <div class="risk-sublabel" id="globalSub">Aguardando análise de inteligência</div>
+        <div class="risk-summary-text" id="globalSummary"></div>
+      </div>
+      <div class="cron-info" id="cronInfo">
+        <div>Última análise: —</div>
+        <div>Próxima: —</div>
+        <div>Ciclo: 30 min</div>
+        <div>Motor: Groq · Llama 3.3 70B</div>
+      </div>
+    </div>
+
+    <!-- LEGEND -->
+    <div class="legend-bar">
+      <span class="legend-label">ESCALA DE RISCO:</span>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:var(--green)"></div> 1-2 Mínimo
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:#80ff44"></div> 3-4 Baixo
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:var(--yellow)"></div> 5-6 Moderado
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:var(--orange)"></div> 7 Elevado
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:var(--red)"></div> 8-9 Crítico
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:var(--black-alert)"></div> 10 Emergência
+      </div>
+    </div>
+
+    <!-- RISK CARDS GRID -->
+    <div class="main-grid" id="cardsGrid">
+      <!-- Cards are injected by JS -->
+    </div>
+
+    <!-- SAFETY RECOMMENDATIONS -->
+    <div class="safety-section" id="safetySection" style="display:none">
+      <div class="safety-title">
+        <span>⚠</span> RECOMENDAÇÕES DE SEGURANÇA
+      </div>
+      <div class="safety-grid" id="safetyGrid"></div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer">
+      <div class="footer-text">
+        PORTUGAL SENTINEL · Análise gerada por IA · Dados geopolíticos, económicos e ambientais · Março 2026
+      </div>
+      <div class="visitor-counter" id="visitorCounter">
+        <span class="visitor-icon">👁</span>
+        <div class="visitor-nums">
+          <div class="visitor-item">
+            <span class="visitor-num" id="visitorOnline">—</span>
+            <span class="visitor-lbl">Online</span>
+          </div>
+          <div class="visitor-divider"></div>
+          <div class="visitor-item">
+            <span class="visitor-num" id="visitorToday">—</span>
+            <span class="visitor-lbl">Hoje</span>
+          </div>
+          <div class="visitor-divider"></div>
+          <div class="visitor-item">
+            <span class="visitor-num" id="visitorTotal">—</span>
+            <span class="visitor-lbl">Total</span>
+          </div>
+        </div>
+      </div>
+      <div class="next-refresh" id="nextRefreshDisplay">Próxima atualização: calculando...</div>
+    </div>
+
   </div>
 
-</div>
+  <script>
+    // ── CONFIG ──────────────────────────────────────────────────────────
+    // MODO 1 — Hostinger (recomendado para produção, key fica oculta):
+    //   Deixe GROQ_API_KEY vazio e certifique-se que groq-proxy.php está
+    //   na mesma pasta. O dashboard usará automaticamente o proxy.
+    //
+    // MODO 2 — Teste local / Claude.ai:
+    //   Cole aqui a sua key Groq (gsk_...) para teste directo.
+    //   NÃO use com GROQ_API_KEY preenchido em produção pública.
+    // ─────────────────────────────────────────────────────────────────────
+    const GROQ_API_KEY = '';  // <- cole gsk_... para teste directo; deixe vazio para usar o proxy PHP
+    const GROQ_MODEL = 'llama-3.3-70b-versatile';
+    let currentCountry = 'pt'; // 'pt' | 'br'
 
-<script>
-// ── CONFIG ──────────────────────────────────────────────────────────
-// MODO 1 — Hostinger (recomendado para produção, key fica oculta):
-//   Deixe GROQ_API_KEY vazio e certifique-se que groq-proxy.php está
-//   na mesma pasta. O dashboard usará automaticamente o proxy.
-//
-// MODO 2 — Teste local / Claude.ai:
-//   Cole aqui a sua key Groq (gsk_...) para teste directo.
-//   NÃO use com GROQ_API_KEY preenchido em produção pública.
-// ─────────────────────────────────────────────────────────────────────
-const GROQ_API_KEY = '';  // <- cole gsk_... para teste directo; deixe vazio para usar o proxy PHP
-const GROQ_MODEL   = 'llama-3.3-70b-versatile';
-const REFRESH_INTERVAL_MS = 30 * 60 * 1000; // cron 30 min
-let nextRefreshTime = null;
-let countdownInterval = null;
-
-// ── COLOR UTILS ──
-const LEVEL_CONFIG = {
-  1: { cls: 'risk-1', color: '#00ff88', colorCls: 'c-green', fillCls: 'fill-green', label: 'MÍNIMO', bannerCls: 'level-1' },
-  2: { cls: 'risk-2', color: '#80ff44', colorCls: 'c-green2', fillCls: 'fill-green2', label: 'BAIXO', bannerCls: 'level-2' },
-  3: { cls: 'risk-3', color: '#ffd600', colorCls: 'c-yellow', fillCls: 'fill-yellow', label: 'MODERADO', bannerCls: 'level-3' },
-  4: { cls: 'risk-4', color: '#ffd600', colorCls: 'c-yellow', fillCls: 'fill-yellow', label: 'MODERADO', bannerCls: 'level-3' },
-  5: { cls: 'risk-4', color: '#ff8c00', colorCls: 'c-orange', fillCls: 'fill-orange', label: 'ELEVADO', bannerCls: 'level-4' },
-  6: { cls: 'risk-4', color: '#ff8c00', colorCls: 'c-orange', fillCls: 'fill-orange', label: 'ELEVADO', bannerCls: 'level-4' },
-  7: { cls: 'risk-4', color: '#ff8c00', colorCls: 'c-orange', fillCls: 'fill-orange', label: 'ELEVADO', bannerCls: 'level-4' },
-  8: { cls: 'risk-5', color: '#ff2040', colorCls: 'c-red', fillCls: 'fill-red', label: 'CRÍTICO', bannerCls: 'level-5' },
-  9: { cls: 'risk-5', color: '#ff2040', colorCls: 'c-red', fillCls: 'fill-red', label: 'CRÍTICO', bannerCls: 'level-5' },
-  10: { cls: 'risk-6', color: '#ff00ff', colorCls: 'c-magenta', fillCls: 'fill-magenta', label: 'EMERGÊNCIA', bannerCls: 'level-6' },
-};
-
-function getLevel(score) {
-  const s = Math.max(1, Math.min(10, Math.round(score)));
-  return { score: s, ...LEVEL_CONFIG[s] };
-}
-
-// ── CLOCK ──
-function updateClock() {
-  const now = new Date();
-  document.getElementById('clock').textContent =
-    now.toLocaleTimeString('pt-PT', { hour12: false });
-}
-setInterval(updateClock, 1000);
-updateClock();
-
-// ── COUNTDOWN ──
-function startCountdown() {
-  nextRefreshTime = Date.now() + REFRESH_INTERVAL_MS;
-  if (countdownInterval) clearInterval(countdownInterval);
-  countdownInterval = setInterval(() => {
-    const remaining = nextRefreshTime - Date.now();
-    if (remaining <= 0) {
-      clearInterval(countdownInterval);
-      runAnalysis();
-      return;
-    }
-    const m = Math.floor(remaining / 60000);
-    const s = Math.floor((remaining % 60000) / 1000);
-    document.getElementById('nextRefreshDisplay').textContent =
-      `Próxima atualização: ${m}m ${String(s).padStart(2,'0')}s`;
-  }, 1000);
-}
-
-// ── CATEGORIES DEFINITION ──
-const CATEGORIES = [
-  {
-    id: 'geopolitical',
-    icon: '🌍',
-    title: 'GEOPOLÍTICA & GUERRA',
-    subtitle: 'NATO · RÚSSIA · UCRÂNIA',
-  },
-  {
-    id: 'military',
-    icon: '⚔️',
-    title: 'AMEAÇA MILITAR',
-    subtitle: 'FORÇAS ARMADAS · DEFESA',
-  },
-  {
-    id: 'economic',
-    icon: '📊',
-    title: 'ESTABILIDADE ECONÓMICA',
-    subtitle: 'INFLAÇÃO · DÍVIDA · EMPREGO',
-  },
-  {
-    id: 'energy',
-    icon: '⚡',
-    title: 'SEGURANÇA ENERGÉTICA',
-    subtitle: 'GÁS · PETRÓLEO · RENOVÁVEIS',
-  },
-  {
-    id: 'social',
-    icon: '🏛️',
-    title: 'ORDEM SOCIAL & POLÍTICA',
-    subtitle: 'GOVERNO · PROTESTOS · MIGRAÇÕES',
-  },
-  {
-    id: 'cyber',
-    icon: '🔐',
-    title: 'CIBER-SEGURANÇA',
-    subtitle: 'INFRA-ESTRUTURAS · ATAQUES',
-  },
-  {
-    id: 'health',
-    icon: '🏥',
-    title: 'SAÚDE PÚBLICA',
-    subtitle: 'SNS · PANDEMIAS · SURTOS',
-  },
-  {
-    id: 'environment',
-    icon: '🌿',
-    title: 'RISCOS AMBIENTAIS',
-    subtitle: 'SISMOS · INCÊNDIOS · CLIMA',
-  },
-  {
-    id: 'food',
-    icon: '🌾',
-    title: 'SEGURANÇA ALIMENTAR',
-    subtitle: 'ABASTECIMENTO · PREÇOS',
-  },
-];
-
-// ── MAIN API CALL ──
-async function runAnalysis() {
-  const btn = document.getElementById('refreshBtn');
-  btn.disabled = true;
-  btn.textContent = '⟳ ANALISANDO...';
-
-  const overlay = document.getElementById('loadingOverlay');
-  overlay.classList.remove('hidden');
-
-  const steps = [
-    'Conectando aos feeds de inteligência...',
-    'Analisando situação geopolítica europeia...',
-    'Verificando ameaças militares à NATO...',
-    'Processando dados económicos de Portugal...',
-    'Avaliando segurança energética...',
-    'Verificando indicadores sociais...',
-    'Calculando índice de risco nacional...',
-    'Compilando recomendações de segurança...',
-  ];
-
-  let stepIdx = 0;
-  const stepInterval = setInterval(() => {
-    document.getElementById('loadingStep').textContent = steps[stepIdx % steps.length];
-    stepIdx++;
-  }, 900);
-
-  try {
-    const prompt = buildPrompt();
-    const systemMsg = 'Você é um analista sênior de inteligência e segurança nacional especializado em riscos para Portugal e Europa. A data atual é março de 2026. Existe um conflito armado ativo na Europa (guerra Rússia-Ucrânia, com escalada). Responda APENAS com um objeto JSON válido, sem texto antes ou depois, sem markdown, sem backticks. O JSON deve ter exatamente a estrutura especificada.';
-
-    let analysis;
-
-    if (GROQ_API_KEY && GROQ_API_KEY.startsWith('gsk_')) {
-      // ── MODO DIRECTO (teste / Claude.ai) ──────────────────────────────
-      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + GROQ_API_KEY
-        },
-        body: JSON.stringify({
-          model: GROQ_MODEL,
-          max_tokens: 4096,
-          temperature: 0.3,
-          messages: [
-            { role: 'system', content: systemMsg },
-            { role: 'user',   content: prompt }
-          ]
-        })
-      });
-      const data = await response.json();
-      clearInterval(stepInterval);
-      if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
-      let text = data.choices?.[0]?.message?.content || '';
-      const fb = text.indexOf('{'), lb = text.lastIndexOf('}');
-      if (fb === -1 || lb === -1) throw new Error('JSON não encontrado na resposta Groq');
-      analysis = JSON.parse(text.slice(fb, lb + 1));
-
-    } else {
-      // ── MODO PROXY PHP (produção no Hostinger) ────────────────────────
-      const response = await fetch('./groq-proxy.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt })
-      });
-      const ct = response.headers.get('content-type') || '';
-      if (!ct.includes('application/json')) {
-        throw new Error('groq-proxy.php não encontrado. Para testar, configure GROQ_API_KEY no topo do script.');
+    const COUNTRY_CONFIG = {
+      pt: {
+        name: 'Portugal',
+        flag: '🇵🇹',
+        context: 'Portugal em março de 2026, membro da NATO e da União Europeia, na periferia ocidental da Europa. Existe um conflito armado ativo na Europa (guerra Rússia-Ucrânia, com escalada). Considere o impacto geopolítico europeu, dependência energética, estabilidade da zona euro e posição atlântica de Portugal.',
+        subtitle: 'Análise geopolítica · Europa · NATO',
+        locale: 'pt-PT',
+      },
+      br: {
+        name: 'Brasil',
+        flag: '🇧🇷',
+        context: 'Brasil em março de 2026, maior economia da América do Sul, com desafios internos políticos, económicos, sociais e ambientais (Amazónia, clima). Considere a polarização política, dívida pública, inflação, violência urbana, desmatamento, relações externas (EUA, China, Argentina) e tensões regionais na América Latina.',
+        subtitle: 'Análise geopolítica · América do Sul · BRICS',
+        locale: 'pt-BR',
       }
-      const data = await response.json();
-      clearInterval(stepInterval);
-      if (data.error) throw new Error(data.error);
-      analysis = data;
+    };
+    const REFRESH_INTERVAL_MS = 30 * 60 * 1000; // cron 30 min
+    let nextRefreshTime = null;
+    let countdownInterval = null;
+
+    // ── COLOR UTILS ──
+    const LEVEL_CONFIG = {
+      1: { cls: 'risk-1', color: '#00ff88', colorCls: 'c-green', fillCls: 'fill-green', label: 'MÍNIMO', bannerCls: 'level-1' },
+      2: { cls: 'risk-2', color: '#80ff44', colorCls: 'c-green2', fillCls: 'fill-green2', label: 'BAIXO', bannerCls: 'level-2' },
+      3: { cls: 'risk-3', color: '#ffd600', colorCls: 'c-yellow', fillCls: 'fill-yellow', label: 'MODERADO', bannerCls: 'level-3' },
+      4: { cls: 'risk-4', color: '#ffd600', colorCls: 'c-yellow', fillCls: 'fill-yellow', label: 'MODERADO', bannerCls: 'level-3' },
+      5: { cls: 'risk-4', color: '#ff8c00', colorCls: 'c-orange', fillCls: 'fill-orange', label: 'ELEVADO', bannerCls: 'level-4' },
+      6: { cls: 'risk-4', color: '#ff8c00', colorCls: 'c-orange', fillCls: 'fill-orange', label: 'ELEVADO', bannerCls: 'level-4' },
+      7: { cls: 'risk-4', color: '#ff8c00', colorCls: 'c-orange', fillCls: 'fill-orange', label: 'ELEVADO', bannerCls: 'level-4' },
+      8: { cls: 'risk-5', color: '#ff2040', colorCls: 'c-red', fillCls: 'fill-red', label: 'CRÍTICO', bannerCls: 'level-5' },
+      9: { cls: 'risk-5', color: '#ff2040', colorCls: 'c-red', fillCls: 'fill-red', label: 'CRÍTICO', bannerCls: 'level-5' },
+      10: { cls: 'risk-6', color: '#ff00ff', colorCls: 'c-magenta', fillCls: 'fill-magenta', label: 'EMERGÊNCIA', bannerCls: 'level-6' },
+    };
+
+    function getLevel(score) {
+      const s = Math.max(1, Math.min(10, Math.round(score)));
+      return { score: s, ...LEVEL_CONFIG[s] };
     }
 
-    renderDashboard(analysis);
-  } catch (err) {
-    clearInterval(stepInterval);
-    console.error('Erro na análise:', err);
-    renderError(err.message);
-  } finally {
-    overlay.classList.add('hidden');
-    btn.disabled = false;
-    btn.textContent = '⟳ ATUALIZAR';
-    startCountdown();
+    // ── CLOCK ──
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('clock').textContent =
+        now.toLocaleTimeString('pt-PT', { hour12: false });
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
 
-    // Update cron info
-    const now = new Date();
-    document.getElementById('cronInfo').innerHTML = `
+    // ── COUNTDOWN ──
+    function startCountdown() {
+      nextRefreshTime = Date.now() + REFRESH_INTERVAL_MS;
+      if (countdownInterval) clearInterval(countdownInterval);
+      countdownInterval = setInterval(() => {
+        const remaining = nextRefreshTime - Date.now();
+        if (remaining <= 0) {
+          clearInterval(countdownInterval);
+          runAnalysis();
+          return;
+        }
+        const m = Math.floor(remaining / 60000);
+        const s = Math.floor((remaining % 60000) / 1000);
+        document.getElementById('nextRefreshDisplay').textContent =
+          `Próxima atualização: ${m}m ${String(s).padStart(2, '0')}s`;
+      }, 1000);
+    }
+
+    // ── CATEGORIES DEFINITION ──
+    const CATEGORIES = [
+      {
+        id: 'geopolitical',
+        icon: '🌍',
+        title: 'GEOPOLÍTICA & GUERRA',
+        subtitle: 'NATO · RÚSSIA · UCRÂNIA',
+      },
+      {
+        id: 'military',
+        icon: '⚔️',
+        title: 'AMEAÇA MILITAR',
+        subtitle: 'FORÇAS ARMADAS · DEFESA',
+      },
+      {
+        id: 'economic',
+        icon: '📊',
+        title: 'ESTABILIDADE ECONÓMICA',
+        subtitle: 'INFLAÇÃO · DÍVIDA · EMPREGO',
+      },
+      {
+        id: 'energy',
+        icon: '⚡',
+        title: 'SEGURANÇA ENERGÉTICA',
+        subtitle: 'GÁS · PETRÓLEO · RENOVÁVEIS',
+      },
+      {
+        id: 'social',
+        icon: '🏛️',
+        title: 'ORDEM SOCIAL & POLÍTICA',
+        subtitle: 'GOVERNO · PROTESTOS · MIGRAÇÕES',
+      },
+      {
+        id: 'cyber',
+        icon: '🔐',
+        title: 'CIBER-SEGURANÇA',
+        subtitle: 'INFRA-ESTRUTURAS · ATAQUES',
+      },
+      {
+        id: 'health',
+        icon: '🏥',
+        title: 'SAÚDE PÚBLICA',
+        subtitle: 'SNS · PANDEMIAS · SURTOS',
+      },
+      {
+        id: 'environment',
+        icon: '🌿',
+        title: 'RISCOS AMBIENTAIS',
+        subtitle: 'SISMOS · INCÊNDIOS · CLIMA',
+      },
+      {
+        id: 'food',
+        icon: '🌾',
+        title: 'SEGURANÇA ALIMENTAR',
+        subtitle: 'ABASTECIMENTO · PREÇOS',
+      },
+    ];
+
+    // ── MAIN API CALL ──
+    function selectCountry(code) {
+      if (code === currentCountry) return;
+      currentCountry = code;
+
+      // Update button states
+      document.querySelectorAll('.country-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('btn-' + code).classList.add('active');
+
+      // Update header title
+      const cfg = COUNTRY_CONFIG[code];
+      document.getElementById('headerTitle').textContent = cfg.name + ' · Sentinel';
+
+      // Clear current analysis and re-run
+      document.getElementById('globalLabel').textContent = 'A CALCULAR...';
+      document.getElementById('globalLabel').style.color = 'var(--text)';
+      document.getElementById('globalSummary').textContent = '';
+      document.getElementById('orbNum').textContent = '—';
+      document.getElementById('cardsGrid').innerHTML = '';
+      document.getElementById('safetySection').style.display = 'none';
+
+      runAnalysis();
+    }
+
+    async function runAnalysis() {
+      const btn = document.getElementById('refreshBtn');
+      btn.disabled = true;
+      btn.textContent = '⟳ ANALISANDO...';
+
+      const overlay = document.getElementById('loadingOverlay');
+      overlay.classList.remove('hidden');
+
+      const country = COUNTRY_CONFIG[currentCountry];
+      const steps = currentCountry === 'pt' ? [
+        'Conectando aos feeds de inteligência...',
+        'Analisando situação geopolítica europeia...',
+        'Verificando ameaças militares à NATO...',
+        'Processando dados económicos de Portugal...',
+        'Avaliando segurança energética...',
+        'Verificando indicadores sociais...',
+        'Calculando índice de risco nacional...',
+        'Compilando recomendações de segurança...',
+      ] : [
+        'Conectando aos feeds de inteligência...',
+        'Analisando situação política brasileira...',
+        'Verificando indicadores económicos...',
+        'Avaliando segurança pública e violência...',
+        'Analisando riscos ambientais e climáticos...',
+        'Verificando relações externas e BRICS...',
+        'Calculando índice de risco nacional...',
+        'Compilando recomendações de segurança...',
+      ];
+
+      let stepIdx = 0;
+      const stepInterval = setInterval(() => {
+        document.getElementById('loadingStep').textContent = steps[stepIdx % steps.length];
+        stepIdx++;
+      }, 900);
+
+      try {
+        const prompt = buildPrompt();
+        const systemMsg = `Você é um analista sênior de inteligência e segurança nacional especializado em riscos para ${country.name}. A data atual é março de 2026. ${country.context} Responda APENAS com um objeto JSON válido, sem texto antes ou depois, sem markdown, sem backticks. O JSON deve ter exatamente a estrutura especificada.`;
+
+        let analysis;
+
+        if (GROQ_API_KEY && GROQ_API_KEY.startsWith('gsk_')) {
+          // ── MODO DIRECTO (teste / Claude.ai) ──────────────────────────────
+          const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + GROQ_API_KEY
+            },
+            body: JSON.stringify({
+              model: GROQ_MODEL,
+              max_tokens: 4096,
+              temperature: 0.3,
+              messages: [
+                { role: 'system', content: systemMsg },
+                { role: 'user', content: prompt }
+              ]
+            })
+          });
+          const data = await response.json();
+          clearInterval(stepInterval);
+          if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+          let text = data.choices?.[0]?.message?.content || '';
+          const fb = text.indexOf('{'), lb = text.lastIndexOf('}');
+          if (fb === -1 || lb === -1) throw new Error('JSON não encontrado na resposta Groq');
+          analysis = JSON.parse(text.slice(fb, lb + 1));
+
+        } else {
+          // ── MODO PROXY PHP (produção no Hostinger) ────────────────────────
+          const response = await fetch('./groq-proxy.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt })
+          });
+          const ct = response.headers.get('content-type') || '';
+          if (!ct.includes('application/json')) {
+            throw new Error('groq-proxy.php não encontrado. Para testar, configure GROQ_API_KEY no topo do script.');
+          }
+          const data = await response.json();
+          clearInterval(stepInterval);
+          if (data.error) throw new Error(data.error);
+          analysis = data;
+        }
+
+        renderDashboard(analysis);
+      } catch (err) {
+        clearInterval(stepInterval);
+        console.error('Erro na análise:', err);
+        renderError(err.message);
+      } finally {
+        overlay.classList.add('hidden');
+        btn.disabled = false;
+        btn.textContent = '⟳ ATUALIZAR';
+        startCountdown();
+
+        // Update cron info
+        const now = new Date();
+        document.getElementById('cronInfo').innerHTML = `
       <div>Última análise: ${now.toLocaleTimeString('pt-PT')}</div>
       <div>Próxima: ${new Date(Date.now() + REFRESH_INTERVAL_MS).toLocaleTimeString('pt-PT')}</div>
       <div>Ciclo: 30 min</div>
       <div>Motor: Groq · Llama 3.3 70B</div>
     `;
-  }
-}
+      }
+    }
 
-function buildPrompt() {
-  return `Analise o nível de risco atual de Portugal em março de 2026 considerando o contexto geopolítico europeu (guerra na Ucrânia, tensões NATO-Rússia, instabilidade política europeia).
+    function buildPrompt() {
+      const country = COUNTRY_CONFIG[currentCountry];
+      return `Analise o nível de risco atual de ${country.name} em março de 2026. ${country.context}
 
 Retorne EXATAMENTE este JSON (sem texto extra, sem backticks):
 
@@ -1002,7 +1328,7 @@ Retorne EXATAMENTE este JSON (sem texto extra, sem backticks):
   "overall": {
     "score": <número 1-10>,
     "label": "<MÍNIMO|BAIXO|MODERADO|ELEVADO|CRÍTICO|EMERGÊNCIA>",
-    "summary": "<2-3 frases de avaliação global concisa do risco para Portugal>"
+    "summary": "<2-3 frases de avaliação global concisa do risco para ${country.name}>"
   },
   "categories": {
     "geopolitical": { "score": <1-10>, "text": "<análise 1-2 frases>", "indicators": ["<item1>","<item2>","<item3>"] },
@@ -1048,39 +1374,40 @@ Retorne EXATAMENTE este JSON (sem texto extra, sem backticks):
     }
   ]
 }`;
-}
+    }
 
-// ── RENDER ──
-function renderDashboard(data) {
-  const overall = getLevel(data.overall.score);
+    // ── RENDER ──
+    function renderDashboard(data) {
+      const overall = getLevel(data.overall.score);
 
-  // Global banner
-  const banner = document.getElementById('globalBanner');
-  banner.className = `global-banner ${overall.bannerCls}`;
+      // Global banner
+      const banner = document.getElementById('globalBanner');
+      banner.className = `global-banner ${overall.bannerCls}`;
 
-  const orb = document.getElementById('globalOrb');
-  orb.className = `risk-orb ${overall.colorCls}`;
-  orb.style.setProperty('--orb-color', overall.color);
-  document.getElementById('orbNum').textContent = data.overall.score;
+      const orb = document.getElementById('globalOrb');
+      orb.className = `risk-orb ${overall.colorCls}`;
+      orb.style.setProperty('--orb-color', overall.color);
+      document.getElementById('orbNum').textContent = data.overall.score;
 
-  document.getElementById('globalLabel').textContent = overall.label; // sempre derivado do score, não da IA
-  document.getElementById('globalLabel').style.color = overall.color;
-  document.getElementById('globalSub').textContent = `Índice de Risco Nacional Composto · ${new Date().toLocaleDateString('pt-PT', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
-  document.getElementById('globalSummary').textContent = data.overall.summary;
+      document.getElementById('globalLabel').textContent = overall.label; // sempre derivado do score, não da IA
+      document.getElementById('globalLabel').style.color = overall.color;
+      const cCfg = COUNTRY_CONFIG[currentCountry];
+      document.getElementById('globalSub').textContent = `${cCfg.flag} ${cCfg.subtitle} · ${new Date().toLocaleDateString(cCfg.locale, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
+      document.getElementById('globalSummary').textContent = data.overall.summary;
 
-  // Cards
-  const grid = document.getElementById('cardsGrid');
-  grid.innerHTML = '';
+      // Cards
+      const grid = document.getElementById('cardsGrid');
+      grid.innerHTML = '';
 
-  CATEGORIES.forEach(cat => {
-    const catData = data.categories[cat.id];
-    if (!catData) return;
-    const level = getLevel(catData.score);
-    const pct = (catData.score / 10) * 100;
+      CATEGORIES.forEach(cat => {
+        const catData = data.categories[cat.id];
+        if (!catData) return;
+        const level = getLevel(catData.score);
+        const pct = (catData.score / 10) * 100;
 
-    const card = document.createElement('div');
-    card.className = `card ${level.cls}`;
-    card.innerHTML = `
+        const card = document.createElement('div');
+        card.className = `card ${level.cls}`;
+        card.innerHTML = `
       <div class="card-header">
         <div>
           <div class="card-icon">${cat.icon}</div>
@@ -1105,18 +1432,18 @@ function renderDashboard(data) {
         `).join('')}
       </div>
     `;
-    grid.appendChild(card);
-  });
+        grid.appendChild(card);
+      });
 
-  // Safety recommendations
-  const safetySection = document.getElementById('safetySection');
-  const safetyGrid = document.getElementById('safetyGrid');
-  safetyGrid.innerHTML = '';
+      // Safety recommendations
+      const safetySection = document.getElementById('safetySection');
+      const safetyGrid = document.getElementById('safetyGrid');
+      safetyGrid.innerHTML = '';
 
-  data.safety_recommendations.forEach(rec => {
-    const card = document.createElement('div');
-    card.className = 'safety-card';
-    card.innerHTML = `
+      data.safety_recommendations.forEach(rec => {
+        const card = document.createElement('div');
+        card.className = 'safety-card';
+        card.innerHTML = `
       <div class="safety-card-title">
         <span>${rec.icon}</span>
         <span style="color:var(--accent)">${rec.category}</span>
@@ -1125,69 +1452,70 @@ function renderDashboard(data) {
         ${rec.items.map(item => `<li>${item}</li>`).join('')}
       </ul>
     `;
-    safetyGrid.appendChild(card);
-  });
+        safetyGrid.appendChild(card);
+      });
 
-  safetySection.style.display = 'block';
-}
+      safetySection.style.display = 'block';
+    }
 
-function renderError(msg) {
-  document.getElementById('globalLabel').textContent = 'ERRO DE CONEXÃO';
-  document.getElementById('globalLabel').style.color = 'var(--red)';
-  document.getElementById('globalSummary').textContent = `Não foi possível obter análise. ${msg}. A tentar novamente em 5 minutos.`;
-}
+    function renderError(msg) {
+      document.getElementById('globalLabel').textContent = 'ERRO DE CONEXÃO';
+      document.getElementById('globalLabel').style.color = 'var(--red)';
+      document.getElementById('globalSummary').textContent = `Não foi possível obter análise. ${msg}. A tentar novamente em 5 minutos.`;
+    }
 
-// ── VISITOR COUNTER (persiste em contador.txt via contador.php) ──────
-const COUNTER_PHP = './contador.php';
+    // ── VISITOR COUNTER (persiste em contador.txt via contador.php) ──────
+    const COUNTER_PHP = './contador.php';
 
-// Gera ou recupera um ID de sessão único para este visitante
-function getSessionId() {
-  let sid = sessionStorage.getItem('sentinel_sid');
-  if (!sid) {
-    sid = Math.random().toString(36).slice(2) + Date.now().toString(36);
-    sessionStorage.setItem('sentinel_sid', sid);
-  }
-  return sid;
-}
+    // Gera ou recupera um ID de sessão único para este visitante
+    function getSessionId() {
+      let sid = sessionStorage.getItem('sentinel_sid');
+      if (!sid) {
+        sid = Math.random().toString(36).slice(2) + Date.now().toString(36);
+        sessionStorage.setItem('sentinel_sid', sid);
+      }
+      return sid;
+    }
 
-function updateCounterUI(data) {
-  document.getElementById('visitorOnline').textContent = data.online ?? '—';
-  document.getElementById('visitorToday').textContent  = (data.today ?? 0).toLocaleString('pt-PT');
-  document.getElementById('visitorTotal').textContent  = (data.total ?? 0).toLocaleString('pt-PT');
-}
+    function updateCounterUI(data) {
+      document.getElementById('visitorOnline').textContent = data.online ?? '—';
+      document.getElementById('visitorToday').textContent = (data.today ?? 0).toLocaleString('pt-PT');
+      document.getElementById('visitorTotal').textContent = (data.total ?? 0).toLocaleString('pt-PT');
+    }
 
-async function initVisitorCounter() {
-  try {
-    const sid = getSessionId();
-
-    // POST — regista visita (incrementa contadores se sessão nova)
-    const res = await fetch(COUNTER_PHP + '?sid=' + sid, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: 'sid=' + sid
-    });
-
-    if (!res.ok) throw new Error('contador.php não respondeu');
-    const data = await res.json();
-    updateCounterUI(data);
-
-    // Heartbeat a cada 5 min para manter sessão "online"
-    setInterval(async () => {
+    async function initVisitorCounter() {
       try {
-        const r = await fetch(COUNTER_PHP + '?sid=' + sid);
-        if (r.ok) updateCounterUI(await r.json());
-      } catch(e) {}
-    }, 5 * 60 * 1000);
+        const sid = getSessionId();
 
-  } catch(err) {
-    console.warn('Contador indisponível (precisa do contador.php no servidor):', err);
-    document.getElementById('visitorCounter').style.display = 'none';
-  }
-}
+        // POST — regista visita (incrementa contadores se sessão nova)
+        const res = await fetch(COUNTER_PHP + '?sid=' + sid, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: 'sid=' + sid
+        });
 
-// ── INIT ──
-initVisitorCounter();
-runAnalysis();
-</script>
+        if (!res.ok) throw new Error('contador.php não respondeu');
+        const data = await res.json();
+        updateCounterUI(data);
+
+        // Heartbeat a cada 5 min para manter sessão "online"
+        setInterval(async () => {
+          try {
+            const r = await fetch(COUNTER_PHP + '?sid=' + sid);
+            if (r.ok) updateCounterUI(await r.json());
+          } catch (e) { }
+        }, 5 * 60 * 1000);
+
+      } catch (err) {
+        console.warn('Contador indisponível (precisa do contador.php no servidor):', err);
+        document.getElementById('visitorCounter').style.display = 'none';
+      }
+    }
+
+    // ── INIT ──
+    initVisitorCounter();
+    runAnalysis();
+  </script>
 </body>
+
 </html>
