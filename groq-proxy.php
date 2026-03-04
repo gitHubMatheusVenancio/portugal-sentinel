@@ -174,7 +174,7 @@ if ($text === null) {
         $ch = curl_init('https://openrouter.ai/api/v1/chat/completions');
         curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_POST => true, CURLOPT_POSTFIELDS => $orBody, CURLOPT_TIMEOUT => 60,
             CURLOPT_HTTPHEADER => ['Content-Type: application/json', 'Authorization: Bearer ' . $orKey,
-                'HTTP-Referer: https://seudominio.com', 'X-Title: Portugal Sentinel']]);
+                'HTTP-Referer: https://geschaft.com.br', 'X-Title: Portugal Sentinel']]);
         $orResponse = curl_exec($ch);
         $orStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $orCurlErr = curl_error($ch);
