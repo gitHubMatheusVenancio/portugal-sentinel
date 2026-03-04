@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PORTUGAL · BRAZIL · SENTINEL — Monitor de Risco Nacional</title>
+  <title>PORTUGAL · SENTINEL — Monitor de Risco Nacional</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link
     href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;400;600;700;900&family=Barlow:wght@300;400;500&display=swap"
@@ -1060,7 +1060,13 @@
     //   Cole aqui a sua key Groq (gsk_...) para teste directo.
     //   NÃO use com GROQ_API_KEY preenchido em produção pública.
     // ─────────────────────────────────────────────────────────────────────
-    const GROQ_API_KEY = '';  // <- cole gsk_... para teste directo; deixe vazio para usar o proxy PHP
+    // Cole as suas keys Groq abaixo (até 3). Deixe vazio para usar groq-proxy.php no servidor.
+    // O sistema tenta automaticamente a próxima key se a atual atingir o limite.
+    const GROQ_API_KEYS = [
+      '',   // key 1 — ex: 'gsk_xxxx'
+      '',   // key 2
+      '',   // key 3
+    ];
     const GROQ_MODEL = 'llama-3.3-70b-versatile';
     let currentCountry = 'pt'; // 'pt' | 'br'
 
@@ -1253,31 +1259,75 @@
 
         let analysis;
 
-        if (GROQ_API_KEY && GROQ_API_KEY.startsWith('gsk_')) {
-          // ── MODO DIRECTO (teste / Claude.ai) ──────────────────────────────
-          const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer ' + GROQ_API_KEY
-            },
-            body: JSON.stringify({
-              model: GROQ_MODEL,
-              max_tokens: 4096,
-              temperature: 0.3,
-              messages: [
-                { role: 'system', content: systemMsg },
-                { role: 'user', content: prompt }
-              ]
-            })
-          });
-          const data = await response.json();
+        const activeKeys = GROQ_API_KEYS.filter(k => k && k.startsWith('gsk_'));
+
+        if (activeKeys.length > 0) {
+          // ── MODO DIRECTO com rotação de keys ─────────────────────────────
+          let lastError = null;
+
+          for (let i = 0; i < activeKeys.length; i++) {
+            const key = activeKeys[i];
+            const keyLabel = `Key ${i + 1}/${activeKeys.length}`;
+            document.getElementById('loadingStep').textContent = `Tentando ${keyLabel}...`;
+
+            try {
+              const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': 'Bearer ' + key
+                },
+                body: JSON.stringify({
+                  model: GROQ_MODEL,
+                  max_tokens: 4096,
+                  temperature: 0.3,
+                  messages: [
+                    { role: 'system', content: systemMsg },
+                    { role: 'user', content: prompt }
+                  ]
+                })
+              });
+
+              const data = await response.json();
+
+              // Verifica se é erro de rate limit — tenta próxima key
+              if (data.error) {
+                const errMsg = data.error.message || JSON.stringify(data.error);
+                const isRateLimit = errMsg.toLowerCase().includes('rate limit')
+                  || errMsg.toLowerCase().includes('tpd')
+                  || errMsg.toLowerCase().includes('tokens per day')
+                  || response.status === 429;
+                if (isRateLimit && i < activeKeys.length - 1) {
+                  console.warn(`[Sentinel] ${keyLabel} esgotada, tentando próxima...`);
+                  lastError = errMsg;
+                  continue; // tenta próxima key
+                }
+                throw new Error(errMsg);
+              }
+
+              // Sucesso!
+              clearInterval(stepInterval);
+              const text = data.choices?.[0]?.message?.content || '';
+              const fb = text.indexOf('{'), lb = text.lastIndexOf('}');
+              if (fb === -1 || lb === -1) throw new Error('JSON não encontrado na resposta Groq');
+              analysis = JSON.parse(text.slice(fb, lb + 1));
+              break; // saiu do loop com sucesso
+
+            } catch (e) {
+              lastError = e.message;
+              // Se não é rate limit ou é a última key, propaga o erro
+              const isRateLimit = lastError.toLowerCase().includes('rate limit')
+                || lastError.toLowerCase().includes('tpd')
+                || lastError.toLowerCase().includes('tokens per day');
+              if (!isRateLimit || i === activeKeys.length - 1) {
+                throw new Error(lastError);
+              }
+              console.warn(`[Sentinel] ${keyLabel} esgotada, tentando próxima...`);
+            }
+          }
+
+          if (!analysis) throw new Error(lastError || 'Todas as keys esgotadas');
           clearInterval(stepInterval);
-          if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
-          let text = data.choices?.[0]?.message?.content || '';
-          const fb = text.indexOf('{'), lb = text.lastIndexOf('}');
-          if (fb === -1 || lb === -1) throw new Error('JSON não encontrado na resposta Groq');
-          analysis = JSON.parse(text.slice(fb, lb + 1));
 
         } else {
           // ── MODO PROXY PHP (produção no Hostinger) ────────────────────────
