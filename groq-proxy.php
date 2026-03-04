@@ -3,15 +3,31 @@
 //  PORTUGAL SENTINEL — Groq API Proxy  (com cache de 1 hora)
 // ============================================================
 
+// ── CARREGA .env (se existir) ─────────────────────────────────
+$envFile = __DIR__ . '/.env';
+if (file_exists($envFile)) {
+    $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        if (strpos(trim($line), '#') === 0)
+            continue;
+        if (strpos($line, '=') !== false) {
+            list($name, $value) = explode('=', $line, 2);
+            $name = trim($name);
+            $value = trim($value, " \t\n\r\0\x0B\"'");
+            $_ENV[$name] = $value;
+        }
+    }
+}
+
 $GROQ_API_KEYS = [
-    '',
-    '',
-    '',
+    $_ENV['GROQ_API_KEY_1'] ?? '',
+    $_ENV['GROQ_API_KEY_2'] ?? '',
+    $_ENV['GROQ_API_KEY_3'] ?? '',
 ];
-define('GROQ_MODEL', 'llama-3.3-70b-versatile');
-define('GROQ_MAX_TOKENS', 4096);
-define('GROQ_TEMPERATURE', 0.3);
-define('OPENROUTER_API_KEY', '');
+define('GROQ_MODEL', $_ENV['GROQ_MODEL'] ?? 'llama-3.3-70b-versatile');
+define('GROQ_MAX_TOKENS', $_ENV['GROQ_MAX_TOKENS'] ?? 4096);
+define('GROQ_TEMPERATURE', $_ENV['GROQ_TEMPERATURE'] ?? 0.3);
+define('OPENROUTER_API_KEY', $_ENV['OPENROUTER_API_KEY'] ?? '');
 
 // ── CACHE ─────────────────────────────────────────────────────
 define('CACHE_FILE', __DIR__ . '/sentinel-cache.json');
