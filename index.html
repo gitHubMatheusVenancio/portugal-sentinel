@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PORTUGAL · SENTINEL — Monitor de Risco Nacional</title>
+  <title>PORTUGAL · BRASIL · SENTINEL — Monitor de Risco Nacional</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link
     href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;400;600;700;900&family=Barlow:wght@300;400;500&display=swap"
@@ -41,21 +41,15 @@
       overflow-x: hidden;
     }
 
-    /* Scanline overlay */
     body::before {
       content: '';
       position: fixed;
       inset: 0;
-      background: repeating-linear-gradient(0deg,
-          transparent,
-          transparent 2px,
-          rgba(0, 0, 0, 0.03) 2px,
-          rgba(0, 0, 0, 0.03) 4px);
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 0, 0, 0.03) 2px, rgba(0, 0, 0, 0.03) 4px);
       pointer-events: none;
       z-index: 1000;
     }
 
-    /* Noise texture */
     body::after {
       content: '';
       position: fixed;
@@ -66,7 +60,6 @@
       z-index: 999;
     }
 
-    /* ── HEADER ── */
     .header {
       display: flex;
       align-items: center;
@@ -103,7 +96,6 @@
       align-items: center;
       justify-content: center;
       font-size: 20px;
-      position: relative;
       animation: pulse-border 3s ease-in-out infinite;
     }
 
@@ -203,14 +195,12 @@
       cursor: not-allowed;
     }
 
-    /* ── GLOBAL RISK BANNER ── */
     .global-banner {
       padding: 16px 32px;
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
       gap: 24px;
-      position: relative;
       transition: background 0.5s;
     }
 
@@ -324,7 +314,29 @@
       line-height: 1.7;
     }
 
-    /* ── LEGEND ── */
+    .badge-cache {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 9px;
+      padding: 1px 5px;
+      border-radius: 3px;
+      letter-spacing: 0.08em;
+      font-weight: bold;
+      margin-left: 4px;
+    }
+
+    .badge-cache.live {
+      background: rgba(0, 255, 136, 0.15);
+      color: var(--green);
+      border: 1px solid rgba(0, 255, 136, 0.35);
+    }
+
+    .badge-cache.cached {
+      background: rgba(255, 214, 0, 0.12);
+      color: var(--yellow);
+      border: 1px solid rgba(255, 214, 0, 0.3);
+    }
+
     .legend-bar {
       display: flex;
       align-items: center;
@@ -332,6 +344,31 @@
       padding: 10px 32px;
       border-bottom: 1px solid var(--border);
       flex-wrap: wrap;
+    }
+
+    .about-note {
+      padding: 10px 32px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(0, 212, 255, 0.02);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+      line-height: 1.6;
+    }
+
+    .about-note-icon {
+      font-size: 14px;
+      flex-shrink: 0;
+      opacity: 0.6;
+    }
+
+    .about-note strong {
+      color: var(--accent);
+      font-weight: normal;
     }
 
     .legend-label {
@@ -357,13 +394,11 @@
       border-radius: 50%;
     }
 
-    /* ── GRID ── */
     .main-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 1px;
       background: var(--border);
-      border-top: none;
     }
 
     @media (max-width: 900px) {
@@ -497,7 +532,6 @@
       border: 1px solid rgba(255, 0, 255, 0.3);
     }
 
-    /* Score bar */
     .score-row {
       display: flex;
       align-items: center;
@@ -522,7 +556,6 @@
     .score-num {
       font-family: var(--mono);
       font-size: 18px;
-      font-weight: 400;
       min-width: 36px;
       text-align: right;
       line-height: 1;
@@ -535,7 +568,6 @@
       margin-bottom: 10px;
     }
 
-    /* Indicators */
     .indicators {
       display: flex;
       flex-direction: column;
@@ -559,7 +591,6 @@
       flex-shrink: 0;
     }
 
-    /* Safety box */
     .safety-section {
       background: var(--surface);
       border-top: 1px solid var(--border);
@@ -626,7 +657,6 @@
       color: var(--accent);
     }
 
-    /* Footer */
     .footer {
       padding: 14px 32px;
       border-top: 1px solid var(--border);
@@ -699,7 +729,6 @@
       background: var(--border);
     }
 
-    /* Loading state */
     .loading-overlay {
       position: fixed;
       inset: 0;
@@ -763,7 +792,6 @@
       margin-top: 6px;
     }
 
-    /* Color helpers for orb/scores */
     .c-green {
       color: var(--green);
       border-color: var(--green);
@@ -818,16 +846,13 @@
       background: var(--black-alert);
     }
 
-    /* Animated background grid lines */
     .bg-lines {
       position: fixed;
       inset: 0;
       pointer-events: none;
       z-index: 0;
       opacity: 0.03;
-      background-image:
-        linear-gradient(rgba(0, 212, 255, 0.5) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0, 212, 255, 0.5) 1px, transparent 1px);
+      background-image: linear-gradient(rgba(0, 212, 255, 0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 212, 255, 0.5) 1px, transparent 1px);
       background-size: 60px 60px;
     }
 
@@ -836,7 +861,6 @@
       z-index: 1;
     }
 
-    /* ── COUNTRY SELECTOR ── */
     .country-selector {
       display: flex;
       align-items: center;
@@ -845,7 +869,6 @@
       background: rgba(0, 0, 0, 0.25);
       border-bottom: 1px solid var(--border);
       justify-content: center;
-      position: relative;
     }
 
     .country-selector-label {
@@ -866,29 +889,17 @@
       cursor: pointer;
       border: none;
       background: transparent;
-      position: relative;
       transition: all 0.25s;
       border-bottom: 2px solid transparent;
-    }
-
-    .country-btn:hover .country-map svg path {
-      opacity: 0.9;
     }
 
     .country-btn.active {
       border-bottom-color: var(--accent);
     }
 
-    .country-btn.active .country-map svg path {
-      fill: var(--accent);
-      opacity: 1;
-    }
-
     .country-btn.active .country-name {
       color: var(--accent);
     }
-
-
 
     .country-name {
       font-family: var(--cond);
@@ -918,7 +929,6 @@
 
   <div class="bg-lines"></div>
 
-  <!-- Loading overlay -->
   <div class="loading-overlay" id="loadingOverlay">
     <div class="loading-spinner"></div>
     <div class="loading-text">A analisar ameaças</div>
@@ -927,46 +937,37 @@
 
   <div class="content-wrap">
 
-    <!-- HEADER -->
     <div class="header">
       <div class="header-glow"></div>
       <div class="logo-block">
         <div class="logo-icon">🛡️</div>
         <div class="logo-text">
           <h1 id="headerTitle">Portugal · Sentinel</h1>
-          <span>MONITOR DE RISCO NACIONAL · v4.0 · GROQ</span>
+          <span>MONITOR DE RISCO NACIONAL · v4.1 · GROQ</span>
         </div>
       </div>
       <div class="header-status">
         <div class="live-badge">
-          <div class="live-dot"></div>
-          GROQ · LLAMA 3.3 · AO VIVO
+          <div class="live-dot"></div>GROQ · LLAMA 3.3 · AO VIVO
         </div>
         <div class="clock" id="clock">--:--:--</div>
-        <button class="refresh-btn" id="refreshBtn" onclick="runAnalysis()">⟳ ATUALIZAR</button>
+        <button class="refresh-btn" id="refreshBtn" onclick="runAnalysis(true)">⟳ ATUALIZAR</button>
       </div>
     </div>
 
-    <!-- COUNTRY SELECTOR -->
     <div class="country-selector">
       <span class="country-selector-label">SELECIONAR PAÍS</span>
-
       <button class="country-btn active" id="btn-pt" onclick="selectCountry('pt')">
-
         <span class="country-flag">🇵🇹</span>
         <span class="country-name">Portugal</span>
       </button>
-
       <div class="selector-divider"></div>
-
       <button class="country-btn" id="btn-br" onclick="selectCountry('br')">
-
         <span class="country-flag">🇧🇷</span>
         <span class="country-name">Brasil</span>
       </button>
     </div>
 
-    <!-- GLOBAL RISK BANNER -->
     <div class="global-banner" id="globalBanner">
       <div class="risk-orb" id="globalOrb">
         <span class="orb-num" id="orbNum">—</span>
@@ -980,12 +981,11 @@
       <div class="cron-info" id="cronInfo">
         <div>Última análise: —</div>
         <div>Próxima: —</div>
-        <div>Ciclo: 30 min</div>
-        <div>Motor: Groq · Llama 3.3 70B</div>
+        <div>Ciclo: 1 hora</div>
+        <div id="motorLabel">Motor: Groq · Llama 3.3 70B</div>
       </div>
     </div>
 
-    <!-- LEGEND -->
     <div class="legend-bar">
       <span class="legend-label">ESCALA DE RISCO:</span>
       <div class="legend-item">
@@ -1008,24 +1008,28 @@
       </div>
     </div>
 
-    <!-- RISK CARDS GRID -->
-    <div class="main-grid" id="cardsGrid">
-      <!-- Cards are injected by JS -->
+    <div class="about-note">
+      <span class="about-note-icon">ℹ</span>
+      <span>
+        O <strong>Sentinel</strong> avalia o nível de risco nacional de <strong>Portugal</strong> e do <strong>Brasil</strong> em 9 dimensões —
+        geopolítica, ameaça militar, estabilidade económica, segurança energética, ordem social e política,
+        cibersegurança, saúde pública, riscos ambientais e segurança alimentar.
+        Os scores são gerados por IA (Groq · Llama 3.3) numa <strong>escala de 1 a 10</strong>,
+        onde 1 representa risco mínimo e 10 emergência nacional.
+        Os dados são actualizados automaticamente a cada hora.
+      </span>
     </div>
 
-    <!-- SAFETY RECOMMENDATIONS -->
+    <div class="main-grid" id="cardsGrid"></div>
+
     <div class="safety-section" id="safetySection" style="display:none">
-      <div class="safety-title">
-        <span>⚠</span> RECOMENDAÇÕES DE SEGURANÇA
-      </div>
+      <div class="safety-title"><span>⚠</span> RECOMENDAÇÕES DE SEGURANÇA</div>
       <div class="safety-grid" id="safetyGrid"></div>
     </div>
 
-    <!-- FOOTER -->
     <div class="footer">
-      <div class="footer-text">
-        PORTUGAL SENTINEL · Análise gerada por IA · Dados geopolíticos, económicos e ambientais · Março 2026
-      </div>
+      <div class="footer-text">PORTUGAL SENTINEL · Análise gerada por IA · Dados geopolíticos, económicos e ambientais ·
+        Março 2026</div>
       <div class="visitor-counter" id="visitorCounter">
         <span class="visitor-icon">👁</span>
         <div class="visitor-nums">
@@ -1051,51 +1055,56 @@
   </div>
 
   <script>
-    // ── CONFIG ──────────────────────────────────────────────────────────
-    // MODO 1 — Hostinger (recomendado para produção, key fica oculta):
-    //   Deixe GROQ_API_KEY vazio e certifique-se que groq-proxy.php está
-    //   na mesma pasta. O dashboard usará automaticamente o proxy.
-    //
-    // MODO 2 — Teste local / Claude.ai:
-    //   Cole aqui a sua key Groq (gsk_...) para teste directo.
-    //   NÃO use com GROQ_API_KEY preenchido em produção pública.
-    // ─────────────────────────────────────────────────────────────────────
-    // Cole as suas keys Groq abaixo (até 3). Deixe vazio para usar groq-proxy.php no servidor.
-    // O sistema tenta automaticamente a próxima key se a atual atingir o limite.
+    // ══════════════════════════════════════════════════════════════════════
+    //  CONFIG
+    //  MODO PROXY (produção · Hostinger): deixe GROQ_API_KEYS vazio.
+    //    O groq-proxy.php gere o cache de 1h, rotação de keys e fallback.
+    //  MODO DIRECTO (teste local): preencha GROQ_API_KEYS.
+    // ══════════════════════════════════════════════════════════════════════
     const GROQ_API_KEYS = [
-      '',   // key 1 — ex: 'gsk_xxxx'
-      '',   // key 2
-      '',   // key 3
+      '',  // 'gsk_...'
+      '',
+      '',
     ];
     const GROQ_MODEL = 'llama-3.3-70b-versatile';
-    let currentCountry = 'pt'; // 'pt' | 'br'
+
+    const OPENROUTER_API_KEY = '';
+    const OPENROUTER_MODELS = [
+      'meta-llama/llama-3.1-8b-instruct:free',
+      'mistralai/mistral-7b-instruct:free',
+      'google/gemma-2-9b-it:free',
+      'qwen/qwen-2.5-7b-instruct:free',
+      'deepseek/deepseek-r1-distill-qwen-7b:free',
+      'nousresearch/hermes-3-llama-3.1-405b:free',
+    ];
+
+    // Intervalo de auto-refresh no modo DIRECTO (sem proxy).
+    // No modo proxy, o servidor controla o ciclo de 1h via cache.
+    const DIRECT_REFRESH_MS = 30 * 60 * 1000;
+
+    let currentCountry = 'pt';
+    let countdownInterval = null;
 
     const COUNTRY_CONFIG = {
       pt: {
-        name: 'Portugal',
-        flag: '🇵🇹',
+        name: 'Portugal', flag: '🇵🇹',
         context: 'Portugal em março de 2026, membro da NATO e da União Europeia, na periferia ocidental da Europa. Existe um conflito armado ativo na Europa (guerra Rússia-Ucrânia, com escalada). Considere o impacto geopolítico europeu, dependência energética, estabilidade da zona euro e posição atlântica de Portugal.',
         subtitle: 'Análise geopolítica · Europa · NATO',
         locale: 'pt-PT',
       },
       br: {
-        name: 'Brasil',
-        flag: '🇧🇷',
+        name: 'Brasil', flag: '🇧🇷',
         context: 'Brasil em março de 2026, maior economia da América do Sul, com desafios internos políticos, económicos, sociais e ambientais (Amazónia, clima). Considere a polarização política, dívida pública, inflação, violência urbana, desmatamento, relações externas (EUA, China, Argentina) e tensões regionais na América Latina.',
         subtitle: 'Análise geopolítica · América do Sul · BRICS',
         locale: 'pt-BR',
       }
     };
-    const REFRESH_INTERVAL_MS = 30 * 60 * 1000; // cron 30 min
-    let nextRefreshTime = null;
-    let countdownInterval = null;
 
-    // ── COLOR UTILS ──
     const LEVEL_CONFIG = {
       1: { cls: 'risk-1', color: '#00ff88', colorCls: 'c-green', fillCls: 'fill-green', label: 'MÍNIMO', bannerCls: 'level-1' },
       2: { cls: 'risk-2', color: '#80ff44', colorCls: 'c-green2', fillCls: 'fill-green2', label: 'BAIXO', bannerCls: 'level-2' },
       3: { cls: 'risk-3', color: '#ffd600', colorCls: 'c-yellow', fillCls: 'fill-yellow', label: 'MODERADO', bannerCls: 'level-3' },
-      4: { cls: 'risk-4', color: '#ffd600', colorCls: 'c-yellow', fillCls: 'fill-yellow', label: 'MODERADO', bannerCls: 'level-3' },
+      4: { cls: 'risk-3', color: '#ffd600', colorCls: 'c-yellow', fillCls: 'fill-yellow', label: 'MODERADO', bannerCls: 'level-3' },
       5: { cls: 'risk-4', color: '#ff8c00', colorCls: 'c-orange', fillCls: 'fill-orange', label: 'ELEVADO', bannerCls: 'level-4' },
       6: { cls: 'risk-4', color: '#ff8c00', colorCls: 'c-orange', fillCls: 'fill-orange', label: 'ELEVADO', bannerCls: 'level-4' },
       7: { cls: 'risk-4', color: '#ff8c00', colorCls: 'c-orange', fillCls: 'fill-orange', label: 'ELEVADO', bannerCls: 'level-4' },
@@ -1109,24 +1118,29 @@
       return { score: s, ...LEVEL_CONFIG[s] };
     }
 
-    // ── CLOCK ──
+    // ── RELÓGIO ──────────────────────────────────────────────────────────
     function updateClock() {
-      const now = new Date();
       document.getElementById('clock').textContent =
-        now.toLocaleTimeString('pt-PT', { hour12: false });
+        new Date().toLocaleTimeString('pt-PT', { hour12: false });
     }
     setInterval(updateClock, 1000);
     updateClock();
 
-    // ── COUNTDOWN ──
-    function startCountdown() {
-      nextRefreshTime = Date.now() + REFRESH_INTERVAL_MS;
+    // ══════════════════════════════════════════════════════════════════════
+    //  COUNTDOWN
+    //  targetMs — timestamp absoluto em ms da próxima atualização.
+    //             Quando vem do proxy usa _next_update×1000 (servidor).
+    //             No modo direto usa DIRECT_REFRESH_MS a partir de agora.
+    // ══════════════════════════════════════════════════════════════════════
+    function startCountdown(targetMs) {
+      const deadline = targetMs || (Date.now() + DIRECT_REFRESH_MS);
       if (countdownInterval) clearInterval(countdownInterval);
+
       countdownInterval = setInterval(() => {
-        const remaining = nextRefreshTime - Date.now();
+        const remaining = deadline - Date.now();
         if (remaining <= 0) {
           clearInterval(countdownInterval);
-          runAnalysis();
+          runAnalysis(false); // proxy decide se usa cache ou API
           return;
         }
         const m = Math.floor(remaining / 60000);
@@ -1136,95 +1150,75 @@
       }, 1000);
     }
 
-    // ── CATEGORIES DEFINITION ──
+    // ── CATEGORIAS ───────────────────────────────────────────────────────
     const CATEGORIES = [
-      {
-        id: 'geopolitical',
-        icon: '🌍',
-        title: 'GEOPOLÍTICA & GUERRA',
-        subtitle: 'NATO · RÚSSIA · UCRÂNIA',
-      },
-      {
-        id: 'military',
-        icon: '⚔️',
-        title: 'AMEAÇA MILITAR',
-        subtitle: 'FORÇAS ARMADAS · DEFESA',
-      },
-      {
-        id: 'economic',
-        icon: '📊',
-        title: 'ESTABILIDADE ECONÓMICA',
-        subtitle: 'INFLAÇÃO · DÍVIDA · EMPREGO',
-      },
-      {
-        id: 'energy',
-        icon: '⚡',
-        title: 'SEGURANÇA ENERGÉTICA',
-        subtitle: 'GÁS · PETRÓLEO · RENOVÁVEIS',
-      },
-      {
-        id: 'social',
-        icon: '🏛️',
-        title: 'ORDEM SOCIAL & POLÍTICA',
-        subtitle: 'GOVERNO · PROTESTOS · MIGRAÇÕES',
-      },
-      {
-        id: 'cyber',
-        icon: '🔐',
-        title: 'CIBER-SEGURANÇA',
-        subtitle: 'INFRA-ESTRUTURAS · ATAQUES',
-      },
-      {
-        id: 'health',
-        icon: '🏥',
-        title: 'SAÚDE PÚBLICA',
-        subtitle: 'SNS · PANDEMIAS · SURTOS',
-      },
-      {
-        id: 'environment',
-        icon: '🌿',
-        title: 'RISCOS AMBIENTAIS',
-        subtitle: 'SISMOS · INCÊNDIOS · CLIMA',
-      },
-      {
-        id: 'food',
-        icon: '🌾',
-        title: 'SEGURANÇA ALIMENTAR',
-        subtitle: 'ABASTECIMENTO · PREÇOS',
-      },
+      { id: 'geopolitical', icon: '🌍', title: 'GEOPOLÍTICA & GUERRA', subtitle: 'NATO · RÚSSIA · UCRÂNIA' },
+      { id: 'military', icon: '⚔️', title: 'AMEAÇA MILITAR', subtitle: 'FORÇAS ARMADAS · DEFESA' },
+      { id: 'economic', icon: '📊', title: 'ESTABILIDADE ECONÓMICA', subtitle: 'INFLAÇÃO · DÍVIDA · EMPREGO' },
+      { id: 'energy', icon: '⚡', title: 'SEGURANÇA ENERGÉTICA', subtitle: 'GÁS · PETRÓLEO · RENOVÁVEIS' },
+      { id: 'social', icon: '🏛️', title: 'ORDEM SOCIAL & POLÍTICA', subtitle: 'GOVERNO · PROTESTOS · MIGRAÇÕES' },
+      { id: 'cyber', icon: '🔐', title: 'CIBER-SEGURANÇA', subtitle: 'INFRA-ESTRUTURAS · ATAQUES' },
+      { id: 'health', icon: '🏥', title: 'SAÚDE PÚBLICA', subtitle: 'SNS · PANDEMIAS · SURTOS' },
+      { id: 'environment', icon: '🌿', title: 'RISCOS AMBIENTAIS', subtitle: 'SISMOS · INCÊNDIOS · CLIMA' },
+      { id: 'food', icon: '🌾', title: 'SEGURANÇA ALIMENTAR', subtitle: 'ABASTECIMENTO · PREÇOS' },
     ];
 
-    // ── MAIN API CALL ──
+    // ── OPENROUTER (modo direto) ─────────────────────────────────────────
+    async function callOpenRouter(prompt, systemMsg) {
+      let lastError = 'Nenhum modelo disponível';
+      for (const model of OPENROUTER_MODELS) {
+        document.getElementById('loadingStep').textContent = `OpenRouter · ${model.split('/')[1]}...`;
+        try {
+          const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + OPENROUTER_API_KEY,
+              'HTTP-Referer': window.location.origin,
+              'X-Title': 'Portugal Sentinel'
+            },
+            body: JSON.stringify({
+              model, max_tokens: 4096, temperature: 0.3,
+              messages: [{ role: 'system', content: systemMsg }, { role: 'user', content: prompt }]
+            })
+          });
+          const data = await res.json();
+          if (data.error) { lastError = `OpenRouter (${model}): ` + (data.error.message || 'erro'); continue; }
+          const text = data.choices?.[0]?.message?.content || '';
+          const fb = text.indexOf('{'), lb = text.lastIndexOf('}');
+          if (fb === -1 || lb === -1) { lastError = `OpenRouter (${model}): JSON não encontrado`; continue; }
+          return JSON.parse(text.slice(fb, lb + 1));
+        } catch (e) { lastError = `OpenRouter (${model}): ` + e.message; }
+      }
+      throw new Error(lastError);
+    }
+
+    // ── SELEÇÃO DE PAÍS ──────────────────────────────────────────────────
     function selectCountry(code) {
       if (code === currentCountry) return;
       currentCountry = code;
-
-      // Update button states
       document.querySelectorAll('.country-btn').forEach(b => b.classList.remove('active'));
       document.getElementById('btn-' + code).classList.add('active');
-
-      // Update header title
-      const cfg = COUNTRY_CONFIG[code];
-      document.getElementById('headerTitle').textContent = cfg.name + ' · Sentinel';
-
-      // Clear current analysis and re-run
+      document.getElementById('headerTitle').textContent = COUNTRY_CONFIG[code].name + ' · Sentinel';
       document.getElementById('globalLabel').textContent = 'A CALCULAR...';
       document.getElementById('globalLabel').style.color = 'var(--text)';
       document.getElementById('globalSummary').textContent = '';
       document.getElementById('orbNum').textContent = '—';
       document.getElementById('cardsGrid').innerHTML = '';
       document.getElementById('safetySection').style.display = 'none';
-
-      runAnalysis();
+      runAnalysis(false); // troca de país nunca força — respeita cache
     }
 
-    async function runAnalysis() {
+    // ══════════════════════════════════════════════════════════════════════
+    //  ANÁLISE PRINCIPAL
+    //  force = true  → envia force:1 ao proxy (ignora cache, chama API)
+    //  force = false → proxy decide: devolve cache válido ou chama API
+    // ══════════════════════════════════════════════════════════════════════
+    async function runAnalysis(force = false) {
       const btn = document.getElementById('refreshBtn');
       btn.disabled = true;
       btn.textContent = '⟳ ANALISANDO...';
-
-      const overlay = document.getElementById('loadingOverlay');
-      overlay.classList.remove('hidden');
+      document.getElementById('loadingOverlay').classList.remove('hidden');
 
       const country = COUNTRY_CONFIG[currentCountry];
       const steps = currentCountry === 'pt' ? [
@@ -1249,134 +1243,139 @@
 
       let stepIdx = 0;
       const stepInterval = setInterval(() => {
-        document.getElementById('loadingStep').textContent = steps[stepIdx % steps.length];
-        stepIdx++;
+        document.getElementById('loadingStep').textContent = steps[stepIdx++ % steps.length];
       }, 900);
+
+      let nextUpdateMs = null; // preenchido pelo proxy via _next_update
 
       try {
         const prompt = buildPrompt();
         const systemMsg = `Você é um analista sênior de inteligência e segurança nacional especializado em riscos para ${country.name}. A data atual é março de 2026. ${country.context} Responda APENAS com um objeto JSON válido, sem texto antes ou depois, sem markdown, sem backticks. O JSON deve ter exatamente a estrutura especificada.`;
 
         let analysis;
-
         const activeKeys = GROQ_API_KEYS.filter(k => k && k.startsWith('gsk_'));
 
-        if (activeKeys.length > 0) {
-          // ── MODO DIRECTO com rotação de keys ─────────────────────────────
+        // ── MODO PROXY (produção · sem keys no frontend) ───────────────
+        if (activeKeys.length === 0) {
+          document.getElementById('loadingStep').textContent =
+            force ? 'Forçando atualização via API...' : 'A carregar dados...';
+
+          const response = await fetch('./groq-proxy.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt, force: force ? 1 : 0 })
+          });
+
+          const ct = response.headers.get('content-type') || '';
+          if (!ct.includes('application/json'))
+            throw new Error('groq-proxy.php não encontrado ou erro de servidor.');
+
+          const data = await response.json();
+          clearInterval(stepInterval);
+
+          if (data.error) {
+            const detail = typeof data.raw === 'object'
+              ? (data.raw?.error?.message || JSON.stringify(data.raw)) : (data.raw || '');
+            throw new Error(data.error + (detail ? ': ' + detail : ''));
+          }
+
+          // _next_update em segundos Unix (vindo do PHP) → converter para ms
+          if (data._next_update) nextUpdateMs = data._next_update * 1000;
+
+          // Badge CACHE ou AO VIVO no cronInfo
+          const fromCache = data._cached === true;
+          const cachedAt = data._cached_at
+            ? new Date(data._cached_at * 1000).toLocaleTimeString('pt-PT')
+            : new Date().toLocaleTimeString('pt-PT');
+          const nextStr = nextUpdateMs
+            ? new Date(nextUpdateMs).toLocaleTimeString('pt-PT') : '—';
+
+          document.getElementById('cronInfo').innerHTML = `
+        <div>Última análise: ${cachedAt}
+          <span class="badge-cache ${fromCache ? 'cached' : 'live'}">
+            ${fromCache ? 'CACHE' : 'AO VIVO'}
+          </span>
+        </div>
+        <div>Próxima API: ${nextStr}</div>
+        <div>Ciclo: 1 hora</div>
+        <div id="motorLabel">Motor: Groq · Llama 3.3 70B</div>`;
+
+          analysis = data;
+
+          // ── MODO DIRECTO (chaves no frontend) ─────────────────────────
+        } else {
           let lastError = null;
 
           for (let i = 0; i < activeKeys.length; i++) {
-            const key = activeKeys[i];
-            const keyLabel = `Key ${i + 1}/${activeKeys.length}`;
-            document.getElementById('loadingStep').textContent = `Tentando ${keyLabel}...`;
-
+            document.getElementById('loadingStep').textContent = `Tentando Groq Key ${i + 1}/${activeKeys.length}...`;
             try {
-              const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+              const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
                 method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': 'Bearer ' + key
-                },
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + activeKeys[i] },
                 body: JSON.stringify({
-                  model: GROQ_MODEL,
-                  max_tokens: 4096,
-                  temperature: 0.3,
-                  messages: [
-                    { role: 'system', content: systemMsg },
-                    { role: 'user', content: prompt }
-                  ]
+                  model: GROQ_MODEL, max_tokens: 4096, temperature: 0.3,
+                  messages: [{ role: 'system', content: systemMsg }, { role: 'user', content: prompt }]
                 })
               });
-
-              const data = await response.json();
-
-              // Verifica se é erro de rate limit — tenta próxima key
+              const data = await res.json();
               if (data.error) {
-                const errMsg = data.error.message || JSON.stringify(data.error);
-                const isRateLimit = errMsg.toLowerCase().includes('rate limit')
-                  || errMsg.toLowerCase().includes('tpd')
-                  || errMsg.toLowerCase().includes('tokens per day')
-                  || response.status === 429;
-                if (isRateLimit && i < activeKeys.length - 1) {
-                  console.warn(`[Sentinel] ${keyLabel} esgotada, tentando próxima...`);
-                  lastError = errMsg;
-                  continue; // tenta próxima key
-                }
-                throw new Error(errMsg);
+                const msg = data.error.message || JSON.stringify(data.error);
+                const rate = res.status === 429 || /rate limit|tpd|tokens per day/i.test(msg);
+                lastError = msg;
+                if (rate) { console.warn('[Sentinel] Key', i + 1, 'esgotada.'); continue; }
+                throw new Error(msg);
               }
-
-              // Sucesso!
-              clearInterval(stepInterval);
               const text = data.choices?.[0]?.message?.content || '';
               const fb = text.indexOf('{'), lb = text.lastIndexOf('}');
               if (fb === -1 || lb === -1) throw new Error('JSON não encontrado na resposta Groq');
               analysis = JSON.parse(text.slice(fb, lb + 1));
-              break; // saiu do loop com sucesso
-
+              break;
             } catch (e) {
               lastError = e.message;
-              // Se não é rate limit ou é a última key, propaga o erro
-              const isRateLimit = lastError.toLowerCase().includes('rate limit')
-                || lastError.toLowerCase().includes('tpd')
-                || lastError.toLowerCase().includes('tokens per day');
-              if (!isRateLimit || i === activeKeys.length - 1) {
-                throw new Error(lastError);
-              }
-              console.warn(`[Sentinel] ${keyLabel} esgotada, tentando próxima...`);
+              if (/rate limit|tpd|tokens per day/i.test(lastError)) continue;
+              throw new Error(lastError);
             }
           }
 
-          if (!analysis) throw new Error(lastError || 'Todas as keys esgotadas');
-          clearInterval(stepInterval);
+          if (!analysis) {
+            if (OPENROUTER_API_KEY && OPENROUTER_API_KEY.startsWith('sk-or-')) {
+              document.getElementById('loadingStep').textContent = 'Groq esgotada · Tentando OpenRouter...';
+              analysis = await callOpenRouter(prompt, systemMsg);
+            } else {
+              throw new Error('Todas as keys Groq atingiram o limite diário. Configure OPENROUTER_API_KEY em openrouter.ai (gratuito).');
+            }
+          }
 
-        } else {
-          // ── MODO PROXY PHP (produção no Hostinger) ────────────────────────
-          const response = await fetch('./groq-proxy.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt })
-          });
-          const ct = response.headers.get('content-type') || '';
-          if (!ct.includes('application/json')) {
-            throw new Error('groq-proxy.php não encontrado ou erro de servidor. Configure GROQ_API_KEY no topo do HTML para testar sem servidor.');
-          }
-          const data = await response.json();
           clearInterval(stepInterval);
-          if (data.error) {
-            // Mostra detalhes do erro Groq para facilitar diagnóstico
-            const detail = typeof data.raw === 'object'
-              ? (data.raw?.error?.message || JSON.stringify(data.raw))
-              : (data.raw || data.error);
-            throw new Error(data.error + (detail ? ': ' + detail : ''));
-          }
-          analysis = data;
+          const now = new Date();
+          document.getElementById('cronInfo').innerHTML = `
+        <div>Última análise: ${now.toLocaleTimeString('pt-PT')}
+          <span class="badge-cache live">AO VIVO</span>
+        </div>
+        <div>Próxima: ${new Date(Date.now() + DIRECT_REFRESH_MS).toLocaleTimeString('pt-PT')}</div>
+        <div>Ciclo: 30 min</div>
+        <div id="motorLabel">Motor: Groq · Llama 3.3 70B</div>`;
         }
 
         renderDashboard(analysis);
+
       } catch (err) {
         clearInterval(stepInterval);
-        console.error('Erro na análise:', err);
+        console.error('[Sentinel]', err);
         renderError(err.message);
       } finally {
-        overlay.classList.add('hidden');
+        document.getElementById('loadingOverlay').classList.add('hidden');
         btn.disabled = false;
         btn.textContent = '⟳ ATUALIZAR';
-        startCountdown();
-
-        // Update cron info
-        const now = new Date();
-        document.getElementById('cronInfo').innerHTML = `
-      <div>Última análise: ${now.toLocaleTimeString('pt-PT')}</div>
-      <div>Próxima: ${new Date(Date.now() + REFRESH_INTERVAL_MS).toLocaleTimeString('pt-PT')}</div>
-      <div>Ciclo: 30 min</div>
-      <div>Motor: Groq · Llama 3.3 70B</div>
-    `;
+        // nextUpdateMs vem do proxy (1h); null → modo direto usa DIRECT_REFRESH_MS
+        startCountdown(nextUpdateMs);
       }
     }
 
+    // ── PROMPT ───────────────────────────────────────────────────────────
     function buildPrompt() {
-      const country = COUNTRY_CONFIG[currentCountry];
-      return `Analise o nível de risco atual de ${country.name} em março de 2026. ${country.context}
+      const c = COUNTRY_CONFIG[currentCountry];
+      return `Analise o nível de risco atual de ${c.name} em março de 2026. ${c.context}
 
 Retorne EXATAMENTE este JSON (sem texto extra, sem backticks):
 
@@ -1384,83 +1383,51 @@ Retorne EXATAMENTE este JSON (sem texto extra, sem backticks):
   "overall": {
     "score": <número 1-10>,
     "label": "<MÍNIMO|BAIXO|MODERADO|ELEVADO|CRÍTICO|EMERGÊNCIA>",
-    "summary": "<2-3 frases de avaliação global concisa do risco para ${country.name}>"
+    "summary": "<2-3 frases de avaliação global concisa do risco para ${c.name}>"
   },
   "categories": {
     "geopolitical": { "score": <1-10>, "text": "<análise 1-2 frases>", "indicators": ["<item1>","<item2>","<item3>"] },
-    "military": { "score": <1-10>, "text": "<análise 1-2 frases>", "indicators": ["<item1>","<item2>","<item3>"] },
-    "economic": { "score": <1-10>, "text": "<análise 1-2 frases>", "indicators": ["<item1>","<item2>","<item3>"] },
-    "energy": { "score": <1-10>, "text": "<análise 1-2 frases>", "indicators": ["<item1>","<item2>","<item3>"] },
-    "social": { "score": <1-10>, "text": "<análise 1-2 frases>", "indicators": ["<item1>","<item2>","<item3>"] },
-    "cyber": { "score": <1-10>, "text": "<análise 1-2 frases>", "indicators": ["<item1>","<item2>","<item3>"] },
-    "health": { "score": <1-10>, "text": "<análise 1-2 frases>", "indicators": ["<item1>","<item2>","<item3>"] },
-    "environment": { "score": <1-10>, "text": "<análise 1-2 frases>", "indicators": ["<item1>","<item2>","<item3>"] },
-    "food": { "score": <1-10>, "text": "<análise 1-2 frases>", "indicators": ["<item1>","<item2>","<item3>"] }
+    "military":     { "score": <1-10>, "text": "<análise 1-2 frases>", "indicators": ["<item1>","<item2>","<item3>"] },
+    "economic":     { "score": <1-10>, "text": "<análise 1-2 frases>", "indicators": ["<item1>","<item2>","<item3>"] },
+    "energy":       { "score": <1-10>, "text": "<análise 1-2 frases>", "indicators": ["<item1>","<item2>","<item3>"] },
+    "social":       { "score": <1-10>, "text": "<análise 1-2 frases>", "indicators": ["<item1>","<item2>","<item3>"] },
+    "cyber":        { "score": <1-10>, "text": "<análise 1-2 frases>", "indicators": ["<item1>","<item2>","<item3>"] },
+    "health":       { "score": <1-10>, "text": "<análise 1-2 frases>", "indicators": ["<item1>","<item2>","<item3>"] },
+    "environment":  { "score": <1-10>, "text": "<análise 1-2 frases>", "indicators": ["<item1>","<item2>","<item3>"] },
+    "food":         { "score": <1-10>, "text": "<análise 1-2 frases>", "indicators": ["<item1>","<item2>","<item3>"] }
   },
   "safety_recommendations": [
-    {
-      "category": "Preparação Individual",
-      "icon": "🎒",
-      "items": ["<recomendação 1>","<recomendação 2>","<recomendação 3>","<recomendação 4>"]
-    },
-    {
-      "category": "Finanças & Recursos",
-      "icon": "💰",
-      "items": ["<recomendação 1>","<recomendação 2>","<recomendação 3>","<recomendação 4>"]
-    },
-    {
-      "category": "Comunicação & Informação",
-      "icon": "📡",
-      "items": ["<recomendação 1>","<recomendação 2>","<recomendação 3>","<recomendação 4>"]
-    },
-    {
-      "category": "Mobilidade & Evacuação",
-      "icon": "🚗",
-      "items": ["<recomendação 1>","<recomendação 2>","<recomendação 3>","<recomendação 4>"]
-    },
-    {
-      "category": "Segurança Digital",
-      "icon": "🔐",
-      "items": ["<recomendação 1>","<recomendação 2>","<recomendação 3>","<recomendação 4>"]
-    },
-    {
-      "category": "Saúde & Emergência",
-      "icon": "🏥",
-      "items": ["<recomendação 1>","<recomendação 2>","<recomendação 3>","<recomendação 4>"]
-    }
+    { "category": "Preparação Individual",    "icon": "🎒", "items": ["<r1>","<r2>","<r3>","<r4>"] },
+    { "category": "Finanças & Recursos",      "icon": "💰", "items": ["<r1>","<r2>","<r3>","<r4>"] },
+    { "category": "Comunicação & Informação", "icon": "📡", "items": ["<r1>","<r2>","<r3>","<r4>"] },
+    { "category": "Mobilidade & Evacuação",   "icon": "🚗", "items": ["<r1>","<r2>","<r3>","<r4>"] },
+    { "category": "Segurança Digital",        "icon": "🔐", "items": ["<r1>","<r2>","<r3>","<r4>"] },
+    { "category": "Saúde & Emergência",       "icon": "🏥", "items": ["<r1>","<r2>","<r3>","<r4>"] }
   ]
 }`;
     }
 
-    // ── RENDER ──
+    // ── RENDER ───────────────────────────────────────────────────────────
     function renderDashboard(data) {
       const overall = getLevel(data.overall.score);
 
-      // Global banner
-      const banner = document.getElementById('globalBanner');
-      banner.className = `global-banner ${overall.bannerCls}`;
-
+      document.getElementById('globalBanner').className = `global-banner ${overall.bannerCls}`;
       const orb = document.getElementById('globalOrb');
       orb.className = `risk-orb ${overall.colorCls}`;
-      orb.style.setProperty('--orb-color', overall.color);
       document.getElementById('orbNum').textContent = data.overall.score;
-
-      document.getElementById('globalLabel').textContent = overall.label; // sempre derivado do score, não da IA
+      document.getElementById('globalLabel').textContent = overall.label;
       document.getElementById('globalLabel').style.color = overall.color;
       const cCfg = COUNTRY_CONFIG[currentCountry];
-      document.getElementById('globalSub').textContent = `${cCfg.flag} ${cCfg.subtitle} · ${new Date().toLocaleDateString(cCfg.locale, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
+      document.getElementById('globalSub').textContent =
+        `${cCfg.flag} ${cCfg.subtitle} · ${new Date().toLocaleDateString(cCfg.locale, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
       document.getElementById('globalSummary').textContent = data.overall.summary;
 
-      // Cards
       const grid = document.getElementById('cardsGrid');
       grid.innerHTML = '';
-
       CATEGORIES.forEach(cat => {
         const catData = data.categories[cat.id];
         if (!catData) return;
         const level = getLevel(catData.score);
-        const pct = (catData.score / 10) * 100;
-
         const card = document.createElement('div');
         card.className = `card ${level.cls}`;
         card.innerHTML = `
@@ -1474,7 +1441,7 @@ Retorne EXATAMENTE este JSON (sem texto extra, sem backticks):
       </div>
       <div class="score-row">
         <div class="score-bar-wrap">
-          <div class="score-bar-fill ${level.fillCls}" style="width: ${pct}%"></div>
+          <div class="score-bar-fill ${level.fillCls}" style="width:${(catData.score / 10) * 100}%"></div>
         </div>
         <div class="score-num" style="color:${level.color}">${catData.score}</div>
       </div>
@@ -1484,18 +1451,13 @@ Retorne EXATAMENTE este JSON (sem texto extra, sem backticks):
           <div class="indicator-row">
             <div class="ind-dot" style="background:${level.color}"></div>
             <span>${ind}</span>
-          </div>
-        `).join('')}
-      </div>
-    `;
+          </div>`).join('')}
+      </div>`;
         grid.appendChild(card);
       });
 
-      // Safety recommendations
-      const safetySection = document.getElementById('safetySection');
       const safetyGrid = document.getElementById('safetyGrid');
       safetyGrid.innerHTML = '';
-
       data.safety_recommendations.forEach(rec => {
         const card = document.createElement('div');
         card.className = 'safety-card';
@@ -1504,81 +1466,57 @@ Retorne EXATAMENTE este JSON (sem texto extra, sem backticks):
         <span>${rec.icon}</span>
         <span style="color:var(--accent)">${rec.category}</span>
       </div>
-      <ul>
-        ${rec.items.map(item => `<li>${item}</li>`).join('')}
-      </ul>
-    `;
+      <ul>${rec.items.map(item => `<li>${item}</li>`).join('')}</ul>`;
         safetyGrid.appendChild(card);
       });
-
-      safetySection.style.display = 'block';
+      document.getElementById('safetySection').style.display = 'block';
     }
 
+    // ── ERROS ────────────────────────────────────────────────────────────
     function renderError(msg) {
       const raw = msg.toLowerCase();
-
-      // ── Limite diário de tokens esgotado ──
       if (raw.includes('tokens per day') || raw.includes('tpd')) {
         const nowUtc = new Date();
         const resetUtc = new Date(Date.UTC(nowUtc.getUTCFullYear(), nowUtc.getUTCMonth(), nowUtc.getUTCDate() + 1));
-        const diffMs = resetUtc - nowUtc;
-        const diffH = Math.floor(diffMs / 3600000);
-        const diffM = Math.floor((diffMs % 3600000) / 60000);
+        const diff = resetUtc - nowUtc;
         document.getElementById('globalLabel').textContent = 'LIMITE DIÁRIO ATINGIDO';
         document.getElementById('globalLabel').style.color = 'var(--yellow)';
         document.getElementById('orbNum').textContent = '⏳';
         document.getElementById('globalSummary').textContent =
-          `O limite gratuito de tokens diários da Groq foi atingido (100 000 tokens/dia). `
-          + `O serviço renova automaticamente à meia-noite UTC — em aproximadamente ${diffH}h ${diffM}m. `
-          + `Não é necessária nenhuma ação da sua parte.`;
+          `O limite gratuito de tokens diários da Groq foi atingido. O serviço renova à meia-noite UTC — em aproximadamente ${Math.floor(diff / 3600000)}h ${Math.floor((diff % 3600000) / 60000)}m.`;
         return;
       }
-
-      // ── Rate limit de curta duração ──
       const retryMatch = raw.match(/try again in (\d+)m(\d+)/);
       if (raw.includes('rate limit') && retryMatch) {
-        const mins = retryMatch[1], secs = retryMatch[2];
+        const [, m, s] = retryMatch;
         document.getElementById('globalLabel').textContent = 'PAUSA TEMPORÁRIA';
         document.getElementById('globalLabel').style.color = 'var(--yellow)';
         document.getElementById('orbNum').textContent = '⏳';
         document.getElementById('globalSummary').textContent =
-          `Demasiados pedidos em pouco tempo. A Groq pede uma pausa de ${mins}m${secs}s. `
-          + `O dashboard vai tentar novamente automaticamente.`;
-        // Auto-retry após o tempo indicado
-        const waitMs = (parseInt(mins) * 60 + parseInt(secs)) * 1000 + 5000;
-        setTimeout(runAnalysis, waitMs);
+          `Demasiados pedidos. A Groq pede uma pausa de ${m}m${s}s. O dashboard tentará novamente.`;
+        setTimeout(() => runAnalysis(false), (parseInt(m) * 60 + parseInt(s)) * 1000 + 5000);
         return;
       }
-
-      // ── Key não configurada ──
       if (raw.includes('api key') || raw.includes('não configurada') || raw.includes('unauthorized')) {
         document.getElementById('globalLabel').textContent = 'KEY NÃO CONFIGURADA';
         document.getElementById('globalLabel').style.color = 'var(--red)';
         document.getElementById('orbNum').textContent = '🔑';
         document.getElementById('globalSummary').textContent =
-          `A API key da Groq não está configurada. Obtenha uma gratuitamente em console.groq.com `
-          + `e cole-a na variável GROQ_API_KEY no topo do script (modo teste) ou em groq-proxy.php (servidor).`;
+          'A API key da Groq não está configurada. Obtenha em console.groq.com e cole em groq-proxy.php.';
         return;
       }
-
-      // ── Erro genérico ──
       document.getElementById('globalLabel').textContent = 'ERRO DE CONEXÃO';
       document.getElementById('globalLabel').style.color = 'var(--red)';
       document.getElementById('orbNum').textContent = '!';
       document.getElementById('globalSummary').textContent = `Não foi possível obter análise: ${msg}`;
-      console.error('[Sentinel]', msg);
     }
 
-    // ── VISITOR COUNTER (persiste em contador.txt via contador.php) ──────
+    // ── CONTADOR DE VISITANTES ───────────────────────────────────────────
     const COUNTER_PHP = './contador.php';
 
-    // Gera ou recupera um ID de sessão único para este visitante
     function getSessionId() {
       let sid = sessionStorage.getItem('sentinel_sid');
-      if (!sid) {
-        sid = Math.random().toString(36).slice(2) + Date.now().toString(36);
-        sessionStorage.setItem('sentinel_sid', sid);
-      }
+      if (!sid) { sid = Math.random().toString(36).slice(2) + Date.now().toString(36); sessionStorage.setItem('sentinel_sid', sid); }
       return sid;
     }
 
@@ -1591,35 +1529,23 @@ Retorne EXATAMENTE este JSON (sem texto extra, sem backticks):
     async function initVisitorCounter() {
       try {
         const sid = getSessionId();
-
-        // POST — regista visita (incrementa contadores se sessão nova)
         const res = await fetch(COUNTER_PHP + '?sid=' + sid, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: 'sid=' + sid
+          method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'sid=' + sid
         });
-
-        if (!res.ok) throw new Error('contador.php não respondeu');
-        const data = await res.json();
-        updateCounterUI(data);
-
-        // Heartbeat a cada 5 min para manter sessão "online"
+        if (!res.ok) throw new Error();
+        updateCounterUI(await res.json());
         setInterval(async () => {
-          try {
-            const r = await fetch(COUNTER_PHP + '?sid=' + sid);
-            if (r.ok) updateCounterUI(await r.json());
-          } catch (e) { }
+          try { const r = await fetch(COUNTER_PHP + '?sid=' + sid); if (r.ok) updateCounterUI(await r.json()); } catch (e) { }
         }, 5 * 60 * 1000);
-
       } catch (err) {
-        console.warn('Contador indisponível (precisa do contador.php no servidor):', err);
+        console.warn('Contador indisponível:', err);
         document.getElementById('visitorCounter').style.display = 'none';
       }
     }
 
-    // ── INIT ──
+    // ── INIT ─────────────────────────────────────────────────────────────
     initVisitorCounter();
-    runAnalysis();
+    runAnalysis(false); // sem force → proxy usa cache se disponível
   </script>
 </body>
 
