@@ -19,9 +19,8 @@ define('GROQ_TEMPERATURE', 0.3);
 
 // Domínios autorizados a chamar este proxy (coloque o seu domínio)
 $allowed_origins = [
-    'https://seudominio.com',
-    'https://www.seudominio.com',
-    'http://localhost', // para testes locais
+    'https://sentinel.geschaft.com.br',
+    'https://www.sentinel.geschaft.com.br',
     'null', // para abrir o HTML directamente no browser
 ];
 
