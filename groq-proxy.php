@@ -25,8 +25,8 @@ $GROQ_API_KEYS = [
     $_ENV['GROQ_API_KEY_3'] ?? '',
 ];
 define('GROQ_MODEL', $_ENV['GROQ_MODEL'] ?? 'llama-3.3-70b-versatile');
-define('GROQ_MAX_TOKENS', $_ENV['GROQ_MAX_TOKENS'] ?? 4096);
-define('GROQ_TEMPERATURE', $_ENV['GROQ_TEMPERATURE'] ?? 0.3);
+define('GROQ_MAX_TOKENS', (int)($_ENV['GROQ_MAX_TOKENS'] ?? 4096));
+define('GROQ_TEMPERATURE', (float)($_ENV['GROQ_TEMPERATURE'] ?? 0.3));
 define('OPENROUTER_API_KEY', $_ENV['OPENROUTER_API_KEY'] ?? '');
 
 // ── CACHE ─────────────────────────────────────────────────────
